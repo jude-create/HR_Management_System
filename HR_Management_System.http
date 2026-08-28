@@ -1,0 +1,203 @@
+@HR_Management_System_HostAddress = https://localhost:7168
+
+GET {{HR_Management_System_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/attendance
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/departments
+
+###
+
+POST {{HR_Management_System_HostAddress}}/api/departments
+Content-Type: application/json
+
+{
+   
+    "slug": "marketing",
+    "name": "marketing",
+    "memberCount": 1
+}
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/departments/09d939d8-084a-4347-a89e-d87ec75b5628
+
+###
+
+PUT {{HR_Management_System_HostAddress}}/api/departments/09d939d8-084a-4347-a89e-d87ec75b5628
+Content-Type: application/json
+
+{
+   "slug": "management",
+    "name": "management",
+    "memberCount": 1
+}
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/employees
+
+###
+
+POST {{HR_Management_System_HostAddress}}/api/employees
+Content-Type: application/json
+
+{
+ 
+  "name": "Jude Funds",
+  "title": "Sales Manager",
+  "email": "jude.johnson@hr.local",
+  "avatarUrl": "https://i.pravatar.cc/160?img=12",
+  "type": "FullTime",
+  "status": "Active",
+  "departmentId": "01959b8b-aaa7-4e3f-8f83-a5e93c16e96a",
+  "departmentName": "management"
+
+}
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/employees/51111111-1111-1111-1111-111111111111
+
+###
+
+PUT {{HR_Management_System_HostAddress}}/api/employees/51111111-1111-1111-1111-111111111111
+Content-Type: application/json
+
+{
+  "name": "Seyi Johnson",
+  "title": "Senior Backend Engineer",
+  "email": "seyi.johnson@hr.local",
+  "avatarUrl": "https://i.pravatar.cc/160?img=12",
+  "type": "Contract",
+  "status": "Active",
+  "departmentId": "41111111-1111-1111-1111-111111111111",
+  "departmentName": "Engineering"
+}
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/holidays
+
+###
+
+POST {{HR_Management_System_HostAddress}}/api/attendance/b2222222-2222-2222-2222-222222222222/correction
+Content-Type: application/json
+
+{
+  
+  "reason": "The clock-in time was correct, but I was marked late by mistake."
+
+}
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/dashboard/stats
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/holidays
+
+###
+
+POST {{HR_Management_System_HostAddress}}/api/holidays
+Content-Type: application/json
+
+{
+  //HolidayUpsertRequest
+}
+
+###
+
+PUT {{HR_Management_System_HostAddress}}/api/holidays/{id:guid}
+Content-Type: application/json
+
+{
+  //HolidayUpsertRequest
+}
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/payroll
+
+###
+
+@period=2036-08
+GET {{HR_Management_System_HostAddress}}/api/payroll/export?period={{period}}
+
+###
+
+POST {{HR_Management_System_HostAddress}}/api/payroll/generate
+Content-Type: application/json
+
+{
+ "id": "98aa3bc2-0592-413c-9f2b-c9650be144c7",
+"period" : "2026-08-20"
+}
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/recruitment/candidates
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/recruitment/candidates/{id:guid}
+
+###
+
+PUT {{HR_Management_System_HostAddress}}/api/recruitment/candidates/{id:guid}/status
+Content-Type: application/json
+
+{
+  //CandidateStatusRequest
+}
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/recruitment/jobs
+
+###
+
+POST {{HR_Management_System_HostAddress}}/api/recruitment/jobs
+Content-Type: application/json
+
+{
+  //JobUpsertRequest
+}
+
+###
+
+GET {{HR_Management_System_HostAddress}}/api/recruitment/jobs/{id:guid}
+
+###
+
+PUT {{HR_Management_System_HostAddress}}/api/recruitment/jobs/{id:guid}
+Content-Type: application/json
+
+{
+  //JobUpsertRequest
+}
+
+###
+
+PUT {{HR_Management_System_HostAddress}}/api/recruitment/jobs/{id:guid}/status
+Content-Type: application/json
+
+{
+  //JobStatusRequest
+}
+
+###
+
+DELETE {{HR_Management_System_HostAddress}}/api/attendance/b3333333-3333-3333-3333-333333333333
+
+###
+
+DELETE {{HR_Management_System_HostAddress}}/api/departments/09d939d8-084a-4347-a89e-d87ec75b5628
+
+###
