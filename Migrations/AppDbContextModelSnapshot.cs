@@ -56,7 +56,7 @@ namespace HR_Management_System.Migrations
 
                     b.HasIndex("EmployeeId");
 
-                    b.ToTable("AttendanceRecords");
+                    b.ToTable("AttendanceRecords", (string)null);
                 });
 
             modelBuilder.Entity("HrManagement.Api.Entities.Candidate", b =>
@@ -93,7 +93,7 @@ namespace HR_Management_System.Migrations
 
                     b.HasIndex("JobId");
 
-                    b.ToTable("Candidates");
+                    b.ToTable("Candidates", (string)null);
                 });
 
             modelBuilder.Entity("HrManagement.Api.Entities.Department", b =>
@@ -112,7 +112,7 @@ namespace HR_Management_System.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Departments");
+                    b.ToTable("Departments", (string)null);
                 });
 
             modelBuilder.Entity("HrManagement.Api.Entities.Employee", b =>
@@ -152,7 +152,7 @@ namespace HR_Management_System.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.ToTable("Employees");
+                    b.ToTable("Employees", (string)null);
                 });
 
             modelBuilder.Entity("HrManagement.Api.Entities.Holiday", b =>
@@ -173,7 +173,7 @@ namespace HR_Management_System.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Holidays");
+                    b.ToTable("Holidays", (string)null);
                 });
 
             modelBuilder.Entity("HrManagement.Api.Entities.Job", b =>
@@ -214,7 +214,7 @@ namespace HR_Management_System.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.ToTable("Jobs");
+                    b.ToTable("Jobs", (string)null);
                 });
 
             modelBuilder.Entity("HrManagement.Api.Entities.Notification", b =>
@@ -247,7 +247,7 @@ namespace HR_Management_System.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("HrManagement.Api.Entities.Payroll", b =>
@@ -282,7 +282,7 @@ namespace HR_Management_System.Migrations
 
                     b.HasIndex("EmployeeId");
 
-                    b.ToTable("Payrolls");
+                    b.ToTable("Payrolls", (string)null);
                 });
 
             modelBuilder.Entity("HrManagement.Api.Entities.User", b =>
@@ -312,7 +312,7 @@ namespace HR_Management_System.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("HrManagement.Api.Entities.UserSettings", b =>
@@ -348,7 +348,7 @@ namespace HR_Management_System.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("UserSettings");
+                    b.ToTable("UserSettings", (string)null);
                 });
 
             modelBuilder.Entity("HrManagement.Api.Entities.Attendance", b =>
