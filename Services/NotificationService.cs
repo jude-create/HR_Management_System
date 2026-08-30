@@ -1,10 +1,10 @@
 using AutoMapper;
-using HrManagement.Api.Data;
-using HrManagement.Api.Dtos.Notifications;
-using HrManagement.Api.Entities;
+using HR_Management_System.Data;
+using HR_Management_System.Dtos.Notifications;
+using HR_Management_System.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HrManagement.Api.Services;
+namespace HR_Management_System.Services;
 
 // NotificationService handles the app's alert and notification feed.
 public interface INotificationService

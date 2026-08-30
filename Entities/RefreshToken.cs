@@ -1,4 +1,4 @@
-namespace HrManagement.Api.Entities;
+namespace HR_Management_System.Entities;
 
 // Backs AuthSessionDto - lets you revoke sessions instead of trusting a JWT forever.
 public class RefreshToken

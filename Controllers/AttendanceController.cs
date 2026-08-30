@@ -1,5 +1,6 @@
-using HrManagement.Api.Dtos.Attendance;
-using HrManagement.Api.Services;
+using HR_Management_System.Dtos.Attendance;
+using HR_Management_System.Dtos.Common;
+using HR_Management_System.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
@@ -25,15 +26,27 @@ public class AttendanceController : ControllerBase
     [HttpPost("{id:guid}/correction")]
     public ActionResult<AttendanceDto> RequestCorrection(Guid id, [FromBody] AttendanceCorrectionRequest request)
     {
-        var attendance = _attendanceService.RequestAttendanceCorrection(id, request);
-        return attendance is null ? NotFound() : Ok(attendance);
+        var result = _attendanceService.RequestAttendanceCorrection(id, request);
+
+        return result.Error switch
+        {
+            AttendanceOperationError.None => Ok(result.Attendance),
+            AttendanceOperationError.NotFound => NotFound("Attendance record not found."),
+            _ => BadRequest("Unable to process correction request.")
+        };
     }
 
     // Deletes an attendance record.
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteAttendance(Guid id)
     {
-        var deleted = _attendanceService.DeleteAttendance(id);
-        return deleted ? NoContent() : NotFound("Attendance record not found.");
+        var result = _attendanceService.DeleteAttendance(id);
+
+        return result.Error switch
+        {
+            AttendanceOperationError.None => NoContent(),
+            AttendanceOperationError.NotFound => NotFound("Attendance record not found."),
+            _ => BadRequest("Unable to delete attendance record.")
+        };
     }
 }

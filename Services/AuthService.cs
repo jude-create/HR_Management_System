@@ -1,11 +1,11 @@
 using AutoMapper;
-using HrManagement.Api.Data;
-using HrManagement.Api.Dtos.Auth;
-using HrManagement.Api.Dtos.Common;
-using HrManagement.Api.Entities;
+using HR_Management_System.Data;
+using HR_Management_System.Dtos.Auth;
+using HR_Management_System.Entities;
+using HR_Management_System.Dtos.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace HrManagement.Api.Services;
+namespace HR_Management_System.Services;
 
 // AuthService owns login and user-account-related logic.
 // It does not know anything about HTTP routes; it only works with request models

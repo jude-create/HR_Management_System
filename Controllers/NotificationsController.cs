@@ -1,5 +1,5 @@
-using HrManagement.Api.Dtos.Notifications;
-using HrManagement.Api.Services;
+using HR_Management_System.Dtos.Notifications;
+using HR_Management_System.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;

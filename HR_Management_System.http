@@ -201,3 +201,12 @@ DELETE {{HR_Management_System_HostAddress}}/api/attendance/b3333333-3333-3333-33
 DELETE {{HR_Management_System_HostAddress}}/api/departments/09d939d8-084a-4347-a89e-d87ec75b5628
 
 ###
+
+PUT {{HR_Management_System_HostAddress}}/api/recruitment/jobs/{id:guid}
+Content-Type: application/json
+
+{
+  //JobUpsertRequest
+}
+
+###

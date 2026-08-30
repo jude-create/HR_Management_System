@@ -1,5 +1,6 @@
-using HrManagement.Api.Dtos.Recruitment;
-using HrManagement.Api.Services;
+using HR_Management_System.Dtos.Common;
+using HR_Management_System.Dtos.Recruitment;
+using HR_Management_System.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
@@ -33,32 +34,61 @@ public class RecruitmentController : ControllerBase
     [HttpPost("jobs")]
     public ActionResult<JobDto> CreateJob([FromBody] JobUpsertRequest request)
     {
-        var job = _recruitmentService.CreateJob(request);
-        return job is null ? BadRequest("Invalid job payload.") : Ok(job);
+        var result = _recruitmentService.CreateJob(request);
+
+        return result.Error switch
+        {
+            JobOperationError.None => Ok(result.Job),
+            JobOperationError.InvalidDepartment => BadRequest("Department does not exist."),
+            JobOperationError.InvalidSalaryRange => BadRequest("SalaryMin cannot be greater than SalaryMax."),
+            _ => BadRequest("Invalid job payload.")
+        };
     }
 
     // Updates an existing job posting.
     [HttpPut("jobs/{id:guid}")]
     public ActionResult<JobDto> UpdateJob(Guid id, [FromBody] JobUpsertRequest request)
     {
-        var job = _recruitmentService.UpdateJob(id, request);
-        return job is null ? NotFound() : Ok(job);
+        var result = _recruitmentService.UpdateJob(id, request);
+
+        return result.Error switch
+        {
+            JobOperationError.None => Ok(result.Job),
+            JobOperationError.NotFound => NotFound("Job not found."),
+            JobOperationError.InvalidDepartment => BadRequest("Department does not exist."),
+            JobOperationError.InvalidSalaryRange => BadRequest("SalaryMin cannot be greater than SalaryMax."),
+            _ => BadRequest("Invalid job payload.")
+        };
     }
 
     // Changes the status of a job, such as Draft or Open.
     [HttpPut("jobs/{id:guid}/status")]
     public ActionResult<JobDto> UpdateJobStatus(Guid id, [FromBody] JobStatusRequest request)
     {
-        var job = _recruitmentService.UpdateJobStatus(id, request);
-        return job is null ? BadRequest("Invalid job status or job not found.") : Ok(job);
+        var result = _recruitmentService.UpdateJobStatus(id, request);
+
+        return result.Error switch
+        {
+            JobOperationError.None => Ok(result.Job),
+            JobOperationError.NotFound => NotFound("Job not found."),
+            JobOperationError.InvalidStatus => BadRequest("Invalid job status."),
+            _ => BadRequest("Invalid job status or job not found.")
+        };
     }
 
     // Deletes a job if no candidates are attached.
     [HttpDelete("jobs/{id:guid}")]
     public IActionResult DeleteJob(Guid id)
     {
-        var deleted = _recruitmentService.DeleteJob(id);
-        return deleted ? NoContent() : NotFound("Job not found, or candidates are still linked to it.");
+        var result = _recruitmentService.DeleteJob(id);
+
+        return result.Error switch
+        {
+            JobOperationError.None => NoContent(),
+            JobOperationError.NotFound => NotFound("Job not found."),
+            JobOperationError.HasCandidates => Conflict("Candidates are still linked to this job."),
+            _ => BadRequest("Unable to delete job.")
+        };
     }
 
     [HttpGet("candidates")]
@@ -77,15 +107,28 @@ public class RecruitmentController : ControllerBase
     [HttpPut("candidates/{id:guid}/status")]
     public ActionResult<CandidateDto> UpdateCandidateStatus(Guid id, [FromBody] CandidateStatusRequest request)
     {
-        var candidate = _recruitmentService.UpdateCandidateStatus(id, request);
-        return candidate is null ? BadRequest("Invalid candidate status or candidate not found.") : Ok(candidate);
+        var result = _recruitmentService.UpdateCandidateStatus(id, request);
+
+        return result.Error switch
+        {
+            CandidateOperationError.None => Ok(result.Candidate),
+            CandidateOperationError.NotFound => NotFound("Candidate not found."),
+            CandidateOperationError.InvalidStatus => BadRequest("Invalid candidate status."),
+            _ => BadRequest("Invalid candidate status or candidate not found.")
+        };
     }
 
     // Deletes a candidate.
     [HttpDelete("candidates/{id:guid}")]
     public IActionResult DeleteCandidate(Guid id)
     {
-        var deleted = _recruitmentService.DeleteCandidate(id);
-        return deleted ? NoContent() : NotFound("Candidate not found.");
+        var result = _recruitmentService.DeleteCandidate(id);
+
+        return result.Error switch
+        {
+            CandidateOperationError.None => NoContent(),
+            CandidateOperationError.NotFound => NotFound("Candidate not found."),
+            _ => BadRequest("Unable to delete candidate.")
+        };
     }
 }

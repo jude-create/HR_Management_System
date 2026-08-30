@@ -1,4 +1,4 @@
-namespace HrManagement.Api.Dtos.Auth;
+namespace HR_Management_System.Dtos.Auth;
 
 // ---- requests (never persisted, just transport) ----
 public record LoginRequest(string Email, string Password);

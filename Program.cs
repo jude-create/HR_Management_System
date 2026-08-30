@@ -1,4 +1,6 @@
-using HrManagement.Api.Data;
+using HR_Management_System.Data;
+using HR_Management_System.Mappings;
+using HR_Management_System.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // AutoMapper scans this assembly for Profile classes like MappingProfile.
-builder.Services.AddAutoMapper(cfg => { }, typeof(HrManagement.Api.Mappings.MappingProfile).Assembly);
+builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 
 // EF Core  context is scoped per request so each operation gets a clean unit of work.
 // Now backed by PostgreSQL instead of the in-memory provider.
@@ -23,16 +25,16 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // Each module gets its own service so the code stays small and focused.
-builder.Services.AddScoped<HrManagement.Api.Services.IAuthService, HrManagement.Api.Services.AuthService>();
-builder.Services.AddScoped<HrManagement.Api.Services.IEmployeeService, HrManagement.Api.Services.EmployeeService>();
-builder.Services.AddScoped<HrManagement.Api.Services.IDepartmentService, HrManagement.Api.Services.DepartmentService>();
-builder.Services.AddScoped<HrManagement.Api.Services.IRecruitmentService, HrManagement.Api.Services.RecruitmentService>();
-builder.Services.AddScoped<HrManagement.Api.Services.IPayrollService, HrManagement.Api.Services.PayrollService>();
-builder.Services.AddScoped<HrManagement.Api.Services.INotificationService, HrManagement.Api.Services.NotificationService>();
-builder.Services.AddScoped<HrManagement.Api.Services.IHolidayService, HrManagement.Api.Services.HolidayService>();
-builder.Services.AddScoped<HrManagement.Api.Services.IAttendanceService, HrManagement.Api.Services.AttendanceService>();
-builder.Services.AddScoped<HrManagement.Api.Services.IDashboardService, HrManagement.Api.Services.DashboardService>();
-builder.Services.AddScoped<HrManagement.Api.Services.ISettingsService, HrManagement.Api.Services.SettingsService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<IRecruitmentService, RecruitmentService>();
+builder.Services.AddScoped<IPayrollService, PayrollService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IHolidayService, HolidayService>();
+builder.Services.AddScoped<IAttendanceService, AttendanceService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<ISettingsService, SettingsService>();
 
 // Swagger gives us a simple UI for testing the API during development.
 builder.Services.AddEndpointsApiExplorer();

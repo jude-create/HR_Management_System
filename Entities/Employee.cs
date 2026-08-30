@@ -1,4 +1,4 @@
-namespace HrManagement.Api.Entities;
+namespace HR_Management_System.Entities;
 
 // Employee is the internal data model for a staff member.
 // This is the object the service layer works with before mapping to an API DTO.

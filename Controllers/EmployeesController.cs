@@ -1,6 +1,6 @@
-using HrManagement.Api.Dtos.Employees;
-using HrManagement.Api.Dtos.Common;
-using HrManagement.Api.Services;
+using HR_Management_System.Dtos.Common;
+using HR_Management_System.Dtos.Employees;
+using HR_Management_System.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
@@ -34,23 +34,47 @@ public class EmployeesController : ControllerBase
     [HttpPost]
     public ActionResult<EmployeeDto> CreateEmployee([FromBody] EmployeeUpsertRequest request)
     {
-        var employee = _employeeService.CreateEmployee(request);
-        return employee is null ? BadRequest("Invalid employee payload.") : Ok(employee);
+        var result = _employeeService.CreateEmployee(request);
+
+        return result.Error switch
+        {
+            EmployeeOperationError.None => Ok(result.Employee),
+            EmployeeOperationError.InvalidDepartment => BadRequest("Department does not exist."),
+            EmployeeOperationError.InvalidType => BadRequest("Invalid employee type."),
+            EmployeeOperationError.InvalidStatus => BadRequest("Invalid employee status."),
+            _ => BadRequest("Invalid employee payload.")
+        };
     }
 
     // Updates an existing employee record.
     [HttpPut("{id:guid}")]
     public ActionResult<EmployeeDto> UpdateEmployee(Guid id, [FromBody] EmployeeUpsertRequest request)
     {
-        var employee = _employeeService.UpdateEmployee(id, request);
-        return employee is null ? NotFound() : Ok(employee);
+        var result = _employeeService.UpdateEmployee(id, request);
+
+        return result.Error switch
+        {
+            EmployeeOperationError.None => Ok(result.Employee),
+            EmployeeOperationError.NotFound => NotFound("Employee not found."),
+            EmployeeOperationError.InvalidDepartment => BadRequest("Department does not exist."),
+            EmployeeOperationError.InvalidType => BadRequest("Invalid employee type."),
+            EmployeeOperationError.InvalidStatus => BadRequest("Invalid employee status."),
+            _ => BadRequest("Invalid employee payload.")
+        };
     }
 
     // Deletes an employee if no dependent records block it.
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteEmployee(Guid id)
     {
-        var deleted = _employeeService.DeleteEmployee(id);
-        return deleted ? NoContent() : NotFound("Employee not found, or linked payroll/attendance records still exist.");
+        var result = _employeeService.DeleteEmployee(id);
+
+        return result.Error switch
+        {
+            EmployeeOperationError.None => NoContent(),
+            EmployeeOperationError.NotFound => NotFound("Employee not found."),
+            EmployeeOperationError.HasDependencies => Conflict("Linked payroll/attendance records still exist."),
+            _ => BadRequest("Unable to delete employee.")
+        };
     }
 }

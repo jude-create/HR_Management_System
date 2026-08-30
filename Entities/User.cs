@@ -1,4 +1,4 @@
-namespace HrManagement.Api.Entities;
+namespace HR_Management_System.Entities;
 
 // One row per login-capable account. This is what LoginRequest/AuthUserDto map to.
 public class User

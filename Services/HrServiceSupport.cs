@@ -1,8 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
-using HrManagement.Api.Entities;
+using HR_Management_System.Entities;
 
-namespace HrManagement.Api.Services;
+namespace HR_Management_System.Services;
 
 // This file is the shared toolbox for the service layer.
 // The code here is not a business module by itself; it contains reusable helpers

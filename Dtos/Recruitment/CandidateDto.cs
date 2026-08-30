@@ -1,4 +1,6 @@
-namespace HrManagement.Api.Dtos.Recruitment;
+using System.ComponentModel.DataAnnotations;
+
+namespace HR_Management_System.Dtos.Recruitment;
 
 public record CandidateDto(
     Guid Id,
@@ -12,4 +14,6 @@ public record CandidateDto(
     string Status
 );
 
-public record CandidateStatusRequest(string Status);
+public record CandidateStatusRequest(
+     [ Required, StringLength(100, MinimumLength = 2)]
+    string Status);

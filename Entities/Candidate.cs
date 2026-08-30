@@ -1,4 +1,4 @@
-namespace HrManagement.Api.Entities;
+namespace HR_Management_System.Entities;
 
 public class Candidate
 {

@@ -1,6 +1,6 @@
-using HrManagement.Api.Dtos.Auth;
-using HrManagement.Api.Dtos.Common;
-using HrManagement.Api.Services;
+using HR_Management_System.Dtos.Auth;
+using HR_Management_System.Services;
+using HR_Management_System.Dtos.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;

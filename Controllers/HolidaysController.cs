@@ -1,5 +1,6 @@
-using HrManagement.Api.Dtos.Holidays;
-using HrManagement.Api.Services;
+using HR_Management_System.Dtos.Common;
+using HR_Management_System.Dtos.Holidays;
+using HR_Management_System.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
@@ -25,23 +26,42 @@ public class HolidaysController : ControllerBase
     [HttpPost]
     public ActionResult<HolidayDto> CreateHoliday([FromBody] HolidayUpsertRequest request)
     {
-        var holiday = _holidayService.CreateHoliday(request);
-        return holiday is null ? BadRequest("Invalid holiday payload.") : Ok(holiday);
+        var result = _holidayService.CreateHoliday(request);
+
+        return result.Error switch
+        {
+            HolidayOperationError.None => Ok(result.Holiday),
+            HolidayOperationError.InvalidType => BadRequest("Invalid holiday type."),
+            _ => BadRequest("Invalid holiday payload.")
+        };
     }
 
     // Updates an existing holiday.
     [HttpPut("{id:guid}")]
     public ActionResult<HolidayDto> UpdateHoliday(Guid id, [FromBody] HolidayUpsertRequest request)
     {
-        var holiday = _holidayService.UpdateHoliday(id, request);
-        return holiday is null ? NotFound() : Ok(holiday);
+        var result = _holidayService.UpdateHoliday(id, request);
+
+        return result.Error switch
+        {
+            HolidayOperationError.None => Ok(result.Holiday),
+            HolidayOperationError.NotFound => NotFound("Holiday not found."),
+            HolidayOperationError.InvalidType => BadRequest("Invalid holiday type."),
+            _ => BadRequest("Invalid holiday payload.")
+        };
     }
 
     // Deletes a holiday.
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteHoliday(Guid id)
     {
-        var deleted = _holidayService.DeleteHoliday(id);
-        return deleted ? NoContent() : NotFound("Holiday not found.");
+        var result = _holidayService.DeleteHoliday(id);
+
+        return result.Error switch
+        {
+            HolidayOperationError.None => NoContent(),
+            HolidayOperationError.NotFound => NotFound("Holiday not found."),
+            _ => BadRequest("Unable to delete holiday.")
+        };
     }
 }

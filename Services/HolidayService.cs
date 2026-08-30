@@ -1,18 +1,19 @@
 using AutoMapper;
-using HrManagement.Api.Data;
-using HrManagement.Api.Dtos.Holidays;
-using HrManagement.Api.Entities;
+using HR_Management_System.Data;
+using HR_Management_System.Dtos.Common;
+using HR_Management_System.Dtos.Holidays;
+using HR_Management_System.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HrManagement.Api.Services;
+namespace HR_Management_System.Services;
 
 // HolidayService stores public/company/optional holiday records.
 public interface IHolidayService
 {
     IReadOnlyList<HolidayDto> GetHolidays();
-    HolidayDto? CreateHoliday(HolidayUpsertRequest request);
-    HolidayDto? UpdateHoliday(Guid id, HolidayUpsertRequest request);
-    bool DeleteHoliday(Guid id);
+    HolidayResult CreateHoliday(HolidayUpsertRequest request);
+    HolidayResult UpdateHoliday(Guid id, HolidayUpsertRequest request);
+    DeleteHolidayResult DeleteHoliday(Guid id);
 }
 
 // The service validates holiday types and keeps holiday data in memory.
@@ -28,18 +29,16 @@ public sealed class HolidayService : IHolidayService
     }
 
     public IReadOnlyList<HolidayDto> GetHolidays()
-        // Sort by date so the calendar view is predictable.
     {
         var holidays = _context.Holidays.AsNoTracking().OrderBy(x => x.Date).ToList();
         return _mapper.Map<List<HolidayDto>>(holidays);
     }
 
-    public HolidayDto? CreateHoliday(HolidayUpsertRequest request)
+    public HolidayResult CreateHoliday(HolidayUpsertRequest request)
     {
-        // Type is sent as text, so we parse it before creating the entity.
         if (!Enum.TryParse<HolidayType>(request.Type, true, out var type))
         {
-            return null;
+            return HolidayResult.Fail(HolidayOperationError.InvalidType);
         }
 
         var holiday = new Holiday
@@ -52,35 +51,40 @@ public sealed class HolidayService : IHolidayService
 
         _context.Holidays.Add(holiday);
         _context.SaveChanges();
-        return _mapper.Map<HolidayDto>(holiday);
+        return HolidayResult.Success(_mapper.Map<HolidayDto>(holiday));
     }
 
-    public HolidayDto? UpdateHoliday(Guid id, HolidayUpsertRequest request)
+    public HolidayResult UpdateHoliday(Guid id, HolidayUpsertRequest request)
     {
-        // Update only if the holiday exists and the type is valid.
         var holiday = _context.Holidays.FirstOrDefault(x => x.Id == id);
-        if (holiday is null || !Enum.TryParse<HolidayType>(request.Type, true, out var type))
+        if (holiday is null)
         {
-            return null;
+            return HolidayResult.Fail(HolidayOperationError.NotFound);
+        }
+
+        if (!Enum.TryParse<HolidayType>(request.Type, true, out var type))
+        {
+            return HolidayResult.Fail(HolidayOperationError.InvalidType);
         }
 
         holiday.Name = request.Name.Trim();
         holiday.Date = request.Date;
         holiday.Type = type;
+
         _context.SaveChanges();
-        return _mapper.Map<HolidayDto>(holiday);
+        return HolidayResult.Success(_mapper.Map<HolidayDto>(holiday));
     }
 
-    public bool DeleteHoliday(Guid id)
+    public DeleteHolidayResult DeleteHoliday(Guid id)
     {
-        // Remove the holiday if found.
         var holiday = _context.Holidays.FirstOrDefault(x => x.Id == id);
         if (holiday is null)
         {
-            return false;
+            return DeleteHolidayResult.Fail(HolidayOperationError.NotFound);
         }
 
         _context.Holidays.Remove(holiday);
-        return _context.SaveChanges() > 0;
+        _context.SaveChanges();
+        return DeleteHolidayResult.Ok();
     }
 }

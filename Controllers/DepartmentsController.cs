@@ -1,5 +1,6 @@
-using HrManagement.Api.Dtos.Employees;
-using HrManagement.Api.Services;
+using HR_Management_System.Dtos.Common;
+using HR_Management_System.Dtos.Employees;
+using HR_Management_System.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
@@ -33,23 +34,43 @@ public class DepartmentsController : ControllerBase
     [HttpPost]
     public ActionResult<DepartmentDto> CreateDepartment([FromBody] DepartmentUpsertRequest request)
     {
-        var department = _departmentService.CreateDepartment(request);
-        return department is null ? BadRequest("Invalid department payload.") : Ok(department);
+        var result = _departmentService.CreateDepartment(request);
+
+        return result.Error switch
+        {
+            DepartmentOperationError.None => Ok(result.Department),
+            DepartmentOperationError.DuplicateName => Conflict("A department with this name already exists."),
+            _ => BadRequest("Invalid department payload.")
+        };
     }
 
     // Updates an existing department.
     [HttpPut("{id:guid}")]
     public ActionResult<DepartmentDto> UpdateDepartment(Guid id, [FromBody] DepartmentUpsertRequest request)
     {
-        var department = _departmentService.UpdateDepartment(id, request);
-        return department is null ? NotFound() : Ok(department);
+        var result = _departmentService.UpdateDepartment(id, request);
+
+        return result.Error switch
+        {
+            DepartmentOperationError.None => Ok(result.Department),
+            DepartmentOperationError.NotFound => NotFound("Department not found."),
+            DepartmentOperationError.DuplicateName => Conflict("A department with this name already exists."),
+            _ => BadRequest("Invalid department payload.")
+        };
     }
 
     // Deletes a department only when it has no assigned employees.
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteDepartment(Guid id)
     {
-        var deleted = _departmentService.DeleteDepartment(id);
-        return deleted ? NoContent() : NotFound("Department not found, or it still has employees assigned.");
+        var result = _departmentService.DeleteDepartment(id);
+
+        return result.Error switch
+        {
+            DepartmentOperationError.None => NoContent(),
+            DepartmentOperationError.NotFound => NotFound("Department not found."),
+            DepartmentOperationError.HasMembers => Conflict("This department still has employees assigned."),
+            _ => BadRequest("Unable to delete department.")
+        };
     }
 }

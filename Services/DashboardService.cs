@@ -1,8 +1,8 @@
-using HrManagement.Api.Data;
-using HrManagement.Api.Dtos.Dashboard;
-using HrManagement.Api.Entities;
+using HR_Management_System.Data;
+using HR_Management_System.Dtos.Dashboard;
+using HR_Management_System.Entities;
 
-namespace HrManagement.Api.Services;
+namespace HR_Management_System.Services;
 
 // DashboardService calculates summary numbers for the home page.
 public interface IDashboardService

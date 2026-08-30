@@ -1,19 +1,20 @@
 using AutoMapper;
-using HrManagement.Api.Data;
-using HrManagement.Api.Dtos.Employees;
-using HrManagement.Api.Entities;
+using HR_Management_System.Data;
+using HR_Management_System.Dtos.Common;
+using HR_Management_System.Dtos.Employees;
+using HR_Management_System.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HrManagement.Api.Services;
+namespace HR_Management_System.Services;
 
 // DepartmentService handles department lists, details, create/update, and delete.
 public interface IDepartmentService
 {
     IReadOnlyList<DepartmentDto> GetDepartments();
     DepartmentDetailDto? GetDepartment(Guid id);
-    DepartmentDto? CreateDepartment(DepartmentUpsertRequest request);
-    DepartmentDto? UpdateDepartment(Guid id, DepartmentUpsertRequest request);
-    bool DeleteDepartment(Guid id);
+    DepartmentResult CreateDepartment(DepartmentUpsertRequest request);
+    DepartmentResult UpdateDepartment(Guid id, DepartmentUpsertRequest request);
+    DeleteDepartmentResult DeleteDepartment(Guid id);
 }
 
 // This service keeps department logic separate from employee logic.
@@ -40,65 +41,78 @@ public sealed class DepartmentService : IDepartmentService
 
     public DepartmentDetailDto? GetDepartment(Guid id)
     {
-        // Get one department and all employees that belong to it.
         var department = _context.Departments
             .Include(x => x.Employees)
             .AsNoTracking()
             .FirstOrDefault(x => x.Id == id);
-        if (department is null)
-        {
-            return null;
-        }
-
-        return _mapper.Map<DepartmentDetailDto>(department);
+        return department is null ? null : _mapper.Map<DepartmentDetailDto>(department);
     }
 
-    public DepartmentDto? CreateDepartment(DepartmentUpsertRequest request)
+    public DepartmentResult CreateDepartment(DepartmentUpsertRequest request)
     {
-        // Slug is generated automatically from the department name.
+        var trimmedName = request.Name.Trim();
+
+        // Prevent two departments from sharing the same name (and therefore slug).
+        var nameExists = _context.Departments
+            .Any(x => x.Name.ToLower() == trimmedName.ToLower());
+        if (nameExists)
+        {
+            return DepartmentResult.Fail(DepartmentOperationError.DuplicateName);
+        }
+
         var department = new Department
         {
             Id = Guid.NewGuid(),
-            Name = request.Name.Trim(),
-            Slug = HrServiceSupport.Slugify(request.Name)
+            Name = trimmedName,
+            Slug = HrServiceSupport.Slugify(trimmedName)
         };
 
         _context.Departments.Add(department);
         _context.SaveChanges();
-        return _mapper.Map<DepartmentDto>(department);
+        return DepartmentResult.Success(_mapper.Map<DepartmentDto>(department));
     }
 
-    public DepartmentDto? UpdateDepartment(Guid id, DepartmentUpsertRequest request)
+    public DepartmentResult UpdateDepartment(Guid id, DepartmentUpsertRequest request)
     {
-        // Only update if the department exists.
         var department = _context.Departments.FirstOrDefault(x => x.Id == id);
         if (department is null)
         {
-            return null;
+            return DepartmentResult.Fail(DepartmentOperationError.NotFound);
         }
 
-        department.Name = request.Name.Trim();
-        department.Slug = HrServiceSupport.Slugify(request.Name);
+        var trimmedName = request.Name.Trim();
+
+        // Allow the department to keep its own name, but block collisions with a different department.
+        var nameTakenByOther = _context.Departments
+            .Any(x => x.Id != id && x.Name.ToLower() == trimmedName.ToLower());
+        if (nameTakenByOther)
+        {
+            return DepartmentResult.Fail(DepartmentOperationError.DuplicateName);
+        }
+
+        department.Name = trimmedName;
+        department.Slug = HrServiceSupport.Slugify(trimmedName);
+
         _context.SaveChanges();
-        return _mapper.Map<DepartmentDto>(department);
+        return DepartmentResult.Success(_mapper.Map<DepartmentDto>(department));
     }
 
-    public bool DeleteDepartment(Guid id)
+    public DeleteDepartmentResult DeleteDepartment(Guid id)
     {
-        // We block delete if the department still has employees attached.
         var department = _context.Departments.FirstOrDefault(x => x.Id == id);
         if (department is null)
         {
-            return false;
+            return DeleteDepartmentResult.Fail(DepartmentOperationError.NotFound);
         }
 
         var hasMembers = _context.Employees.Any(x => x.DepartmentId == id);
         if (hasMembers)
         {
-            return false;
+            return DeleteDepartmentResult.Fail(DepartmentOperationError.HasMembers);
         }
 
         _context.Departments.Remove(department);
-        return _context.SaveChanges() > 0;
+        _context.SaveChanges();
+        return DeleteDepartmentResult.Ok();
     }
 }

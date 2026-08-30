@@ -1,73 +1,75 @@
 using AutoMapper;
-using HrManagement.Api.Dtos.Attendance;
-using HrManagement.Api.Dtos.Auth;
-using HrManagement.Api.Dtos.Employees;
-using HrManagement.Api.Dtos.Holidays;
-using HrManagement.Api.Dtos.Notifications;
-using HrManagement.Api.Dtos.Payroll;
-using HrManagement.Api.Dtos.Recruitment;
-using HrManagement.Api.Dtos.Settings;
-using HrManagement.Api.Entities;
+using HR_Management_System.Dtos.Attendance;
+using HR_Management_System.Dtos.Auth;
+using HR_Management_System.Dtos.Employees;
+using HR_Management_System.Dtos.Holidays;
+using HR_Management_System.Dtos.Notifications;
+using HR_Management_System.Dtos.Payroll;
+using HR_Management_System.Dtos.Recruitment;
+using HR_Management_System.Dtos.Settings;
+using HR_Management_System.Entities;
 
-namespace HrManagement.Api.Mappings;
+namespace HR_Management_System.Mappings;
 
 // AutoMapper profile = the place where we describe how entities become DTOs.
 // This keeps the mapping rules in one place instead of repeating them in every service.
+// NOTE: All target DTOs are records with positional constructors, so custom-mapped
+// fields must use ForCtorParam (not ForMember) — ForMember only works on settable properties.
 public class MappingProfile : Profile
 {
     public MappingProfile()
     {
         CreateMap<User, AuthUserDto>()
-            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()))
-            .ForMember(dest => dest.Permissions, opt => opt.MapFrom(src => src.Permissions));
+            .ForCtorParam("Role", opt => opt.MapFrom(src => src.Role.ToString()))
+            .ForCtorParam("Permissions", opt => opt.MapFrom(src => src.Permissions));
 
         CreateMap<Employee, EmployeeDto>()
-            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-            .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department.Name));
+            .ForCtorParam("Type", opt => opt.MapFrom(src => src.Type.ToString()))
+            .ForCtorParam("Status", opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForCtorParam("DepartmentName", opt => opt.MapFrom(src => src.Department.Name));
 
         CreateMap<Department, DepartmentDto>()
-            .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.Employees.Count));
+            .ForCtorParam("MemberCount", opt => opt.MapFrom(src => src.Employees.Count));
 
         CreateMap<Department, DepartmentDetailDto>()
-            .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.Employees));
+            .ForCtorParam("Members", opt => opt.MapFrom(src => src.Employees));
 
         CreateMap<Job, JobDto>()
-            .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.Roles))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-            .ForMember(dest => dest.CandidateCount, opt => opt.MapFrom(src => src.Candidates.Count));
+            .ForCtorParam("Roles", opt => opt.MapFrom(src => src.Roles))
+            .ForCtorParam("Status", opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForCtorParam("CandidateCount", opt => opt.MapFrom(src => src.Candidates.Count));
 
         CreateMap<Candidate, CandidateDto>()
-            .ForMember(dest => dest.AppliedForTitle, opt => opt.MapFrom(src => src.Job.Title))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+            .ForCtorParam("AppliedForTitle", opt => opt.MapFrom(src => src.Job.Title))
+            .ForCtorParam("Status", opt => opt.MapFrom(src => src.Status.ToString()));
 
         CreateMap<Payroll, PayrollDto>()
-            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.Name))
-            .ForMember(dest => dest.EmployeeAvatarUrl, opt => opt.MapFrom(src => src.Employee.AvatarUrl))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+            .ForCtorParam("EmployeeName", opt => opt.MapFrom(src => src.Employee.Name))
+            .ForCtorParam("EmployeeAvatarUrl", opt => opt.MapFrom(src => src.Employee.AvatarUrl))
+            .ForCtorParam("Status", opt => opt.MapFrom(src => src.Status.ToString()));
 
         CreateMap<Notification, NotificationDto>()
-            .ForMember(dest => dest.IsRead, opt => opt.MapFrom(src => src.Status == NotificationStatus.Read))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-            .ForMember(dest => dest.ActionType, opt => opt.MapFrom(src => src.ActionType.ToString()));
+            .ForCtorParam("IsRead", opt => opt.MapFrom(src => src.Status == NotificationStatus.Read))
+            .ForCtorParam("Status", opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForCtorParam("ActionType", opt => opt.MapFrom(src => src.ActionType.ToString()));
 
         CreateMap<Holiday, HolidayDto>()
-            .ForMember(dest => dest.DayOfWeek, opt => opt.MapFrom(src => src.Date.DayOfWeek.ToString()))
-            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()));
+            .ForCtorParam("DayOfWeek", opt => opt.MapFrom(src => src.Date.DayOfWeek.ToString()))
+            .ForCtorParam("Type", opt => opt.MapFrom(src => src.Type.ToString()));
 
         CreateMap<Attendance, AttendanceDto>()
-            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.Name))
-            .ForMember(dest => dest.EmployeeAvatarUrl, opt => opt.MapFrom(src => src.Employee.AvatarUrl))
-            .ForMember(dest => dest.EmployeeTitle, opt => opt.MapFrom(src => src.Employee.Title))
-            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-            .ForMember(dest => dest.CorrectionStatus, opt => opt.MapFrom(src => src.CorrectionStatus.ToString()));
+            .ForCtorParam("EmployeeName", opt => opt.MapFrom(src => src.Employee.Name))
+            .ForCtorParam("EmployeeAvatarUrl", opt => opt.MapFrom(src => src.Employee.AvatarUrl))
+            .ForCtorParam("EmployeeTitle", opt => opt.MapFrom(src => src.Employee.Title))
+            .ForCtorParam("Type", opt => opt.MapFrom(src => src.Type.ToString()))
+            .ForCtorParam("Status", opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForCtorParam("CorrectionStatus", opt => opt.MapFrom(src => src.CorrectionStatus.ToString()));
 
         CreateMap<UserSettings, SettingsDto>()
-            .ForMember(dest => dest.Appearance, opt => opt.MapFrom(src => src.Appearance.ToString()))
-            .ForMember(dest => dest.TwoFactor, opt => opt.MapFrom(src => src.TwoFactorEnabled))
-            .ForMember(dest => dest.MobilePush, opt => opt.MapFrom(src => src.MobilePushEnabled))
-            .ForMember(dest => dest.DesktopNotifications, opt => opt.MapFrom(src => src.DesktopNotificationsEnabled))
-            .ForMember(dest => dest.EmailNotifications, opt => opt.MapFrom(src => src.EmailNotificationsEnabled));
+            .ForCtorParam("Appearance", opt => opt.MapFrom(src => src.Appearance.ToString()))
+            .ForCtorParam("TwoFactor", opt => opt.MapFrom(src => src.TwoFactorEnabled))
+            .ForCtorParam("MobilePush", opt => opt.MapFrom(src => src.MobilePushEnabled))
+            .ForCtorParam("DesktopNotifications", opt => opt.MapFrom(src => src.DesktopNotificationsEnabled))
+            .ForCtorParam("EmailNotifications", opt => opt.MapFrom(src => src.EmailNotificationsEnabled));
     }
 }

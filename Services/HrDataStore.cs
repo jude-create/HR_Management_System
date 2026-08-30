@@ -1,6 +1,7 @@
-using HrManagement.Api.Entities;
+using HR_Management_System.Entities;
 
-namespace HrManagement.Api.Services;
+
+namespace HR_Management_System.Services;
 
 // This class is our fake database for now.
 // It stores seeded data in memory so the API can be tested without a real DB.

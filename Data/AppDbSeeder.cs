@@ -1,7 +1,8 @@
-using HrManagement.Api.Entities;
-using HrManagement.Api.Services;
+using HR_Management_System.Entities;
+using HR_Management_System.Services;
 
-namespace HrManagement.Api.Data;
+
+namespace HR_Management_System.Data;
 
 internal static class DemoSeedData
 {

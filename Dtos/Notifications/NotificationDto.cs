@@ -1,4 +1,6 @@
-namespace HrManagement.Api.Dtos.Notifications;
+using System.ComponentModel.DataAnnotations;
+
+namespace HR_Management_System.Dtos.Notifications;
 
 public record NotificationDto(
     Guid Id,
@@ -10,4 +12,6 @@ public record NotificationDto(
     string ActionType
 );
 
-public record NotificationStatusRequest(string Status);
+public record NotificationStatusRequest(
+      [ Required, StringLength(500, MinimumLength = 5, ErrorMessage = "Reason must be between 5 and 500 characters.")]
+    string Status);

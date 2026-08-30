@@ -1,9 +1,9 @@
 using System.Text.Json;
-using HrManagement.Api.Entities;
+using HR_Management_System.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace HrManagement.Api.Data;
+namespace HR_Management_System.Data;
 
 public sealed class AppDbContext : DbContext
 {

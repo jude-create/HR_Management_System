@@ -1,23 +1,23 @@
 using AutoMapper;
-using HrManagement.Api.Data;
-using HrManagement.Api.Dtos.Common;
-using HrManagement.Api.Dtos.Employees;
-using HrManagement.Api.Entities;
+using HR_Management_System.Data;
+using HR_Management_System.Dtos.Common;
+using HR_Management_System.Dtos.Employees;
+using HR_Management_System.Entities;
+using HR_Management_System.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace HrManagement.Api.Services;
+namespace HR_Management_System.Services;
 
 // EmployeeService is responsible for employee CRUD and list pagination.
 public interface IEmployeeService
 {
     PagedResponse<EmployeeDto> GetEmployees(int page, int pageSize);
     EmployeeDto? GetEmployee(Guid id);
-    EmployeeDto? CreateEmployee(EmployeeUpsertRequest request);
-    EmployeeDto? UpdateEmployee(Guid id, EmployeeUpsertRequest request);
-    bool DeleteEmployee(Guid id);
+    EmployeeResult CreateEmployee(EmployeeUpsertRequest request);
+    EmployeeResult UpdateEmployee(Guid id, EmployeeUpsertRequest request);
+    DeleteResult DeleteEmployee(Guid id);
 }
 
-// It reads and writes employees from the shared in-memory store.
 public sealed class EmployeeService : IEmployeeService
 {
     private readonly AppDbContext _context;
@@ -56,15 +56,22 @@ public sealed class EmployeeService : IEmployeeService
         return employee is null ? null : _mapper.Map<EmployeeDto>(employee);
     }
 
-    public EmployeeDto? CreateEmployee(EmployeeUpsertRequest request)
+    public EmployeeResult CreateEmployee(EmployeeUpsertRequest request)
     {
-        // Validate that the enum-like strings and department are valid before saving.
-        var department = _context.Departments.FirstOrDefault(x => x.Id == request.DepartmentId);
-        if (!HrServiceSupport.TryResolveEmployeeType(request.Type, out var type) ||
-            !HrServiceSupport.TryResolveEmployeeStatus(request.Status, out var status) ||
-            department is null)
+        if (!HrServiceSupport.TryResolveEmployeeType(request.Type, out var type))
         {
-            return null;
+            return EmployeeResult.Fail(EmployeeOperationError.InvalidType);
+        }
+
+        if (!HrServiceSupport.TryResolveEmployeeStatus(request.Status, out var status))
+        {
+            return EmployeeResult.Fail(EmployeeOperationError.InvalidStatus);
+        }
+
+        var department = _context.Departments.FirstOrDefault(x => x.Id == request.DepartmentId);
+        if (department is null)
+        {
+            return EmployeeResult.Fail(EmployeeOperationError.InvalidDepartment);
         }
 
         var employee = new Employee
@@ -83,20 +90,31 @@ public sealed class EmployeeService : IEmployeeService
 
         _context.Employees.Add(employee);
         _context.SaveChanges();
-        return _mapper.Map<EmployeeDto>(employee);
+        return EmployeeResult.Success(_mapper.Map<EmployeeDto>(employee));
     }
 
-    public EmployeeDto? UpdateEmployee(Guid id, EmployeeUpsertRequest request)
+    public EmployeeResult UpdateEmployee(Guid id, EmployeeUpsertRequest request)
     {
-        // Find the employee first; if it does not exist, the update cannot continue.
         var employee = _context.Employees.FirstOrDefault(x => x.Id == id);
-        var newDepartment = _context.Departments.FirstOrDefault(x => x.Id == request.DepartmentId);
-        if (employee is null ||
-            newDepartment is null ||
-            !HrServiceSupport.TryResolveEmployeeType(request.Type, out var type) ||
-            !HrServiceSupport.TryResolveEmployeeStatus(request.Status, out var status))
+        if (employee is null)
         {
-            return null;
+            return EmployeeResult.Fail(EmployeeOperationError.NotFound);
+        }
+
+        if (!HrServiceSupport.TryResolveEmployeeType(request.Type, out var type))
+        {
+            return EmployeeResult.Fail(EmployeeOperationError.InvalidType);
+        }
+
+        if (!HrServiceSupport.TryResolveEmployeeStatus(request.Status, out var status))
+        {
+            return EmployeeResult.Fail(EmployeeOperationError.InvalidStatus);
+        }
+
+        var newDepartment = _context.Departments.FirstOrDefault(x => x.Id == request.DepartmentId);
+        if (newDepartment is null)
+        {
+            return EmployeeResult.Fail(EmployeeOperationError.InvalidDepartment);
         }
 
         employee.Name = request.Name.Trim();
@@ -109,26 +127,26 @@ public sealed class EmployeeService : IEmployeeService
         employee.Department = newDepartment;
 
         _context.SaveChanges();
-        return _mapper.Map<EmployeeDto>(employee);
+        return EmployeeResult.Success(_mapper.Map<EmployeeDto>(employee));
     }
 
-    public bool DeleteEmployee(Guid id)
+    public DeleteResult DeleteEmployee(Guid id)
     {
-        // Deletion is blocked if the employee still participates in payroll or attendance.
         var employee = _context.Employees.FirstOrDefault(x => x.Id == id);
         if (employee is null)
         {
-            return false;
+            return DeleteResult.Fail(EmployeeOperationError.NotFound);
         }
 
         var hasPayroll = _context.Payrolls.Any(x => x.EmployeeId == id);
         var hasAttendance = _context.AttendanceRecords.Any(x => x.EmployeeId == id);
         if (hasPayroll || hasAttendance)
         {
-            return false;
+            return DeleteResult.Fail(EmployeeOperationError.HasDependencies);
         }
 
         _context.Employees.Remove(employee);
-        return _context.SaveChanges() > 0;
+        _context.SaveChanges();
+        return DeleteResult.Ok();
     }
 }

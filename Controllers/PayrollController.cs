@@ -1,7 +1,7 @@
-using HrManagement.Api.Dtos.Payroll;
-using HrManagement.Api.Dtos.Common;
-using HrManagement.Api.Services;
+using HR_Management_System.Dtos.Common;
 using Microsoft.AspNetCore.Mvc;
+using HR_Management_System.Dtos.Payroll;
+using HR_Management_System.Services;
 
 namespace HR_Management_System.Controllers;
 
@@ -36,7 +36,13 @@ public class PayrollController : ControllerBase
     [HttpDelete("{id:guid}")]
     public IActionResult DeletePayroll(Guid id)
     {
-        var deleted = _payrollService.DeletePayroll(id);
-        return deleted ? NoContent() : NotFound("Payroll not found.");
+        var result = _payrollService.DeletePayroll(id);
+
+        return result.Error switch
+        {
+            PayrollOperationError.None => NoContent(),
+            PayrollOperationError.NotFound => NotFound("Payroll not found."),
+            _ => BadRequest("Unable to delete payroll.")
+        };
     }
 }

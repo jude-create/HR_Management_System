@@ -1,5 +1,5 @@
-using HrManagement.Api.Dtos.Settings;
-using HrManagement.Api.Services;
+using HR_Management_System.Dtos.Settings;
+using HR_Management_System.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
@@ -19,10 +19,28 @@ public class SettingsController : ControllerBase
     // Gets the current user's settings.
     [HttpGet]
     public ActionResult<SettingsDto> GetSettings()
-        => Ok(_settingsService.GetSettings());
+    {
+        try
+        {
+            return Ok(_settingsService.GetSettings());
+        }
+        catch (CurrentUserNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+    }
 
     // Updates the current user's settings.
     [HttpPut]
     public ActionResult<SettingsDto> UpdateSettings([FromBody] SettingsUpdateRequest request)
-        => Ok(_settingsService.UpdateSettings(request));
+    {
+        try
+        {
+            return Ok(_settingsService.UpdateSettings(request));
+        }
+        catch (CurrentUserNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+    }
 }

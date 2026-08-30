@@ -1,11 +1,11 @@
 using AutoMapper;
-using HrManagement.Api.Data;
-using HrManagement.Api.Dtos.Common;
-using HrManagement.Api.Dtos.Payroll;
-using HrManagement.Api.Entities;
+using HR_Management_System.Data;
+using HR_Management_System.Dtos.Common;
+using HR_Management_System.Dtos.Payroll;
+using HR_Management_System.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HrManagement.Api.Services;
+namespace HR_Management_System.Services;
 
 // PayrollService calculates and manages payroll data.
 public interface IPayrollService
@@ -13,7 +13,7 @@ public interface IPayrollService
     IReadOnlyList<PayrollDto> GetPayrolls();
     IReadOnlyList<PayrollDto> GeneratePayrolls(PayrollGenerateRequest request);
     ApiMessageResponse ExportPayroll(PayrollExportRequest request);
-    bool DeletePayroll(Guid id);
+    DeletePayrollResult DeletePayroll(Guid id);
 }
 
 // This service creates payroll entries from active employees and the requested period.
@@ -46,7 +46,6 @@ public sealed class PayrollService : IPayrollService
 
         foreach (var employee in activeEmployees)
         {
-            // Avoid duplicate payroll rows for the same employee and period.
             var existing = _context.Payrolls
                 .Include(x => x.Employee)
                 .FirstOrDefault(x => x.EmployeeId == employee.Id && x.Period == request.Period);
@@ -56,7 +55,6 @@ public sealed class PayrollService : IPayrollService
                 continue;
             }
 
-            // Simple demo salary calculation based on employee type.
             var baseCtc = HrServiceSupport.GetBaseCtc(employee);
             var payroll = new Payroll
             {
@@ -69,7 +67,6 @@ public sealed class PayrollService : IPayrollService
                 Status = PayrollStatus.Processing,
                 Employee = employee
             };
-
             _context.Payrolls.Add(payroll);
             generated.Add(_mapper.Map<PayrollDto>(payroll));
         }
@@ -79,19 +76,18 @@ public sealed class PayrollService : IPayrollService
     }
 
     public ApiMessageResponse ExportPayroll(PayrollExportRequest request)
-        // The export is a placeholder message for now.
         => new($"Payroll export for {request.Period} is ready as {request.Format.ToLowerInvariant()}.");
 
-    public bool DeletePayroll(Guid id)
+    public DeletePayrollResult DeletePayroll(Guid id)
     {
-        // Remove payroll from the in-memory list if it exists.
         var payroll = _context.Payrolls.FirstOrDefault(x => x.Id == id);
         if (payroll is null)
         {
-            return false;
+            return DeletePayrollResult.Fail(PayrollOperationError.NotFound);
         }
 
         _context.Payrolls.Remove(payroll);
-        return _context.SaveChanges() > 0;
+        _context.SaveChanges();
+        return DeletePayrollResult.Ok();
     }
 }

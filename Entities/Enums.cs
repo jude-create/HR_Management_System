@@ -1,4 +1,4 @@
-namespace HrManagement.Api.Entities;
+namespace HR_Management_System.Entities;
 
 public enum EmployeeType { FullTime, PartTime, Contract, Intern }
 public enum EmployeeStatus { Active, OnLeave, Suspended, Terminated }

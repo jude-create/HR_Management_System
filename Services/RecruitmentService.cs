@@ -1,24 +1,25 @@
 using AutoMapper;
-using HrManagement.Api.Data;
-using HrManagement.Api.Dtos.Recruitment;
-using HrManagement.Api.Entities;
+using HR_Management_System.Data;
+using HR_Management_System.Dtos.Common;
+using HR_Management_System.Dtos.Recruitment;
+using HR_Management_System.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HrManagement.Api.Services;
+namespace HR_Management_System.Services;
 
 // RecruitmentService handles jobs and candidates.
 public interface IRecruitmentService
 {
     IReadOnlyList<JobDto> GetJobs();
     JobDto? GetJob(Guid id);
-    JobDto? CreateJob(JobUpsertRequest request);
-    JobDto? UpdateJob(Guid id, JobUpsertRequest request);
-    JobDto? UpdateJobStatus(Guid id, JobStatusRequest request);
-    bool DeleteJob(Guid id);
+    JobResult CreateJob(JobUpsertRequest request);
+    JobResult UpdateJob(Guid id, JobUpsertRequest request);
+    JobResult UpdateJobStatus(Guid id, JobStatusRequest request);
+    DeleteJobResult DeleteJob(Guid id);
     IReadOnlyList<CandidateDto> GetCandidates();
     CandidateDto? GetCandidate(Guid id);
-    CandidateDto? UpdateCandidateStatus(Guid id, CandidateStatusRequest request);
-    bool DeleteCandidate(Guid id);
+    CandidateResult UpdateCandidateStatus(Guid id, CandidateStatusRequest request);
+    DeleteCandidateResult DeleteCandidate(Guid id);
 }
 
 // This module owns hiring-related logic and the links between jobs and candidates.
@@ -52,12 +53,16 @@ public sealed class RecruitmentService : IRecruitmentService
         return job is null ? null : _mapper.Map<JobDto>(job);
     }
 
-    public JobDto? CreateJob(JobUpsertRequest request)
+    public JobResult CreateJob(JobUpsertRequest request)
     {
-        // A job must belong to a real department.
+        if (request.SalaryMin > request.SalaryMax)
+        {
+            return JobResult.Fail(JobOperationError.InvalidSalaryRange);
+        }
+
         if (!_context.Departments.Any(x => x.Id == request.DepartmentId))
         {
-            return null;
+            return JobResult.Fail(JobOperationError.InvalidDepartment);
         }
 
         var job = new Job
@@ -75,16 +80,25 @@ public sealed class RecruitmentService : IRecruitmentService
 
         _context.Jobs.Add(job);
         _context.SaveChanges();
-        return _mapper.Map<JobDto>(job);
+        return JobResult.Success(_mapper.Map<JobDto>(job));
     }
 
-    public JobDto? UpdateJob(Guid id, JobUpsertRequest request)
+    public JobResult UpdateJob(Guid id, JobUpsertRequest request)
     {
-        // Update existing job details if the record and department are valid.
         var job = _context.Jobs.FirstOrDefault(x => x.Id == id);
-        if (job is null || !_context.Departments.Any(x => x.Id == request.DepartmentId))
+        if (job is null)
         {
-            return null;
+            return JobResult.Fail(JobOperationError.NotFound);
+        }
+
+        if (request.SalaryMin > request.SalaryMax)
+        {
+            return JobResult.Fail(JobOperationError.InvalidSalaryRange);
+        }
+
+        if (!_context.Departments.Any(x => x.Id == request.DepartmentId))
+        {
+            return JobResult.Fail(JobOperationError.InvalidDepartment);
         }
 
         job.Title = request.Title.Trim();
@@ -94,41 +108,46 @@ public sealed class RecruitmentService : IRecruitmentService
         job.SalaryMin = request.SalaryMin;
         job.SalaryMax = request.SalaryMax;
         job.DepartmentId = request.DepartmentId;
+
         _context.SaveChanges();
-        return _mapper.Map<JobDto>(job);
+        return JobResult.Success(_mapper.Map<JobDto>(job));
     }
 
-    public JobDto? UpdateJobStatus(Guid id, JobStatusRequest request)
+    public JobResult UpdateJobStatus(Guid id, JobStatusRequest request)
     {
-        // Status is sent as text, so we parse it into the enum.
         var job = _context.Jobs.FirstOrDefault(x => x.Id == id);
-        if (job is null || !Enum.TryParse<JobStatus>(request.Status, true, out var status))
+        if (job is null)
         {
-            return null;
+            return JobResult.Fail(JobOperationError.NotFound);
+        }
+
+        if (!Enum.TryParse<JobStatus>(request.Status, true, out var status))
+        {
+            return JobResult.Fail(JobOperationError.InvalidStatus);
         }
 
         job.Status = status;
         _context.SaveChanges();
-        return _mapper.Map<JobDto>(job);
+        return JobResult.Success(_mapper.Map<JobDto>(job));
     }
 
-    public bool DeleteJob(Guid id)
+    public DeleteJobResult DeleteJob(Guid id)
     {
-        // A job cannot be deleted while candidates are still attached to it.
         var job = _context.Jobs.FirstOrDefault(x => x.Id == id);
         if (job is null)
         {
-            return false;
+            return DeleteJobResult.Fail(JobOperationError.NotFound);
         }
 
         var hasCandidates = _context.Candidates.Any(x => x.JobId == id);
         if (hasCandidates)
         {
-            return false;
+            return DeleteJobResult.Fail(JobOperationError.HasCandidates);
         }
 
         _context.Jobs.Remove(job);
-        return _context.SaveChanges() > 0;
+        _context.SaveChanges();
+        return DeleteJobResult.Ok();
     }
 
     public IReadOnlyList<CandidateDto> GetCandidates()
@@ -150,30 +169,34 @@ public sealed class RecruitmentService : IRecruitmentService
         return candidate is null ? null : _mapper.Map<CandidateDto>(candidate);
     }
 
-    public CandidateDto? UpdateCandidateStatus(Guid id, CandidateStatusRequest request)
+    public CandidateResult UpdateCandidateStatus(Guid id, CandidateStatusRequest request)
     {
-        // Candidate status changes follow the same string-to-enum pattern.
         var candidate = _context.Candidates.FirstOrDefault(x => x.Id == id);
-        if (candidate is null || !Enum.TryParse<CandidateStatus>(request.Status, true, out var status))
+        if (candidate is null)
         {
-            return null;
+            return CandidateResult.Fail(CandidateOperationError.NotFound);
+        }
+
+        if (!Enum.TryParse<CandidateStatus>(request.Status, true, out var status))
+        {
+            return CandidateResult.Fail(CandidateOperationError.InvalidStatus);
         }
 
         candidate.Status = status;
         _context.SaveChanges();
-        return _mapper.Map<CandidateDto>(candidate);
+        return CandidateResult.Success(_mapper.Map<CandidateDto>(candidate));
     }
 
-    public bool DeleteCandidate(Guid id)
+    public DeleteCandidateResult DeleteCandidate(Guid id)
     {
-        // Candidates can be removed directly if they exist.
         var candidate = _context.Candidates.FirstOrDefault(x => x.Id == id);
         if (candidate is null)
         {
-            return false;
+            return DeleteCandidateResult.Fail(CandidateOperationError.NotFound);
         }
 
         _context.Candidates.Remove(candidate);
-        return _context.SaveChanges() > 0;
+        _context.SaveChanges();
+        return DeleteCandidateResult.Ok();
     }
 }

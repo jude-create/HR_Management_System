@@ -1,10 +1,21 @@
 using AutoMapper;
-using HrManagement.Api.Data;
-using HrManagement.Api.Dtos.Settings;
-using HrManagement.Api.Entities;
+using HR_Management_System.Data;
+using HR_Management_System.Dtos.Settings;
+using HR_Management_System.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HrManagement.Api.Services;
+namespace HR_Management_System.Services;
+
+// Thrown when the demo "current user" record is missing from the database.
+// This should never happen in a correctly seeded system, so it's treated as
+// an exceptional case rather than a normal validation failure.
+public sealed class CurrentUserNotFoundException : Exception
+{
+    public CurrentUserNotFoundException()
+        : base("The current user could not be found. The database may not be seeded correctly.")
+    {
+    }
+}
 
 // SettingsService manages the current user's preferences.
 public interface ISettingsService
@@ -27,20 +38,21 @@ public sealed class SettingsService : ISettingsService
 
     public SettingsDto GetSettings()
     {
-        // Read the current user's saved settings from the store.
         var user = _context.Users.Include(x => x.Settings).FirstOrDefault(x => x.Id == _context.CurrentUserId);
-        return user is null
-            ? new SettingsDto("System", "en", false, true, true, true)
-            : _mapper.Map<SettingsDto>(user.Settings);
+        if (user is null)
+        {
+            throw new CurrentUserNotFoundException();
+        }
+
+        return _mapper.Map<SettingsDto>(user.Settings);
     }
 
     public SettingsDto UpdateSettings(SettingsUpdateRequest request)
     {
-        // Update only the fields the caller supplied.
         var user = _context.Users.Include(x => x.Settings).FirstOrDefault(x => x.Id == _context.CurrentUserId);
         if (user is null)
         {
-            return new SettingsDto("System", "en", false, true, true, true);
+            throw new CurrentUserNotFoundException();
         }
 
         if (!string.IsNullOrWhiteSpace(request.Appearance) &&

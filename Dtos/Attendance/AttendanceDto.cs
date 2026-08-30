@@ -1,4 +1,6 @@
-namespace HrManagement.Api.Dtos.Attendance;
+using System.ComponentModel.DataAnnotations;
+
+namespace HR_Management_System.Dtos.Attendance;
 
 public record AttendanceDto(
     Guid Id,
@@ -14,4 +16,7 @@ public record AttendanceDto(
     string CorrectionStatus
 );
 
-public record AttendanceCorrectionRequest(string Reason);
+public record AttendanceCorrectionRequest(
+    [ Required, StringLength(500, MinimumLength = 5, ErrorMessage = "Reason must be between 5 and 500 characters.")]
+    string Reason
+);
