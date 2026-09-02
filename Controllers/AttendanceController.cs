@@ -1,11 +1,13 @@
 using HR_Management_System.Dtos.Attendance;
 using HR_Management_System.Dtos.Common;
 using HR_Management_System.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
 
 // AttendanceController manages attendance list and correction requests.
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class AttendanceController : ControllerBase

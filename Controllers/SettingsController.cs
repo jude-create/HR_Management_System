@@ -1,10 +1,12 @@
 using HR_Management_System.Dtos.Settings;
 using HR_Management_System.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
 
 // SettingsController exposes the current user's preferences.
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class SettingsController : ControllerBase

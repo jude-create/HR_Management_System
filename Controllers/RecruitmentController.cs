@@ -1,11 +1,13 @@
 using HR_Management_System.Dtos.Common;
 using HR_Management_System.Dtos.Recruitment;
 using HR_Management_System.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
 
 // RecruitmentController groups endpoints for jobs and candidates.
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class RecruitmentController : ControllerBase
@@ -119,6 +121,7 @@ public class RecruitmentController : ControllerBase
     }
 
     // Deletes a candidate.
+    [Authorize(Roles = "Admin")]
     [HttpDelete("candidates/{id:guid}")]
     public IActionResult DeleteCandidate(Guid id)
     {

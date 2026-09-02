@@ -1,11 +1,13 @@
 using HR_Management_System.Dtos.Common;
 using HR_Management_System.Dtos.Employees;
 using HR_Management_System.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
 
 // DepartmentsController handles department list, detail, create, update, and delete endpoints.
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class DepartmentsController : ControllerBase
@@ -60,6 +62,7 @@ public class DepartmentsController : ControllerBase
     }
 
     // Deletes a department only when it has no assigned employees.
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteDepartment(Guid id)
     {

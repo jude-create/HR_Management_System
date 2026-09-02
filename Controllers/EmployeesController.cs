@@ -1,11 +1,13 @@
 using HR_Management_System.Dtos.Common;
 using HR_Management_System.Dtos.Employees;
 using HR_Management_System.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
 
 // EmployeesController handles employee CRUD and paging.
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class EmployeesController : ControllerBase
@@ -64,6 +66,7 @@ public class EmployeesController : ControllerBase
     }
 
     // Deletes an employee if no dependent records block it.
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteEmployee(Guid id)
     {

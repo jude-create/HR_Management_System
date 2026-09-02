@@ -1,11 +1,13 @@
 using HR_Management_System.Dtos.Common;
-using Microsoft.AspNetCore.Mvc;
 using HR_Management_System.Dtos.Payroll;
 using HR_Management_System.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
 
 // PayrollController exposes payroll list, generate, export, and delete endpoints.
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class PayrollController : ControllerBase
@@ -33,6 +35,7 @@ public class PayrollController : ControllerBase
         => Ok(_payrollService.ExportPayroll(new PayrollExportRequest(period, format)));
 
     // Deletes a payroll record.
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id:guid}")]
     public IActionResult DeletePayroll(Guid id)
     {

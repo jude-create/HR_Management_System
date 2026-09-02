@@ -1,11 +1,13 @@
 using HR_Management_System.Dtos.Common;
 using HR_Management_System.Dtos.Holidays;
 using HR_Management_System.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
 
 // HolidaysController handles holiday calendar records.
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class HolidaysController : ControllerBase

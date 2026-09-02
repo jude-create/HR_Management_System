@@ -1,11 +1,11 @@
 using HR_Management_System.Dtos.Auth;
 using HR_Management_System.Services;
 using HR_Management_System.Dtos.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
 
-// AuthController exposes login and account-management endpoints.
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
@@ -17,7 +17,7 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
-    // Signs a user in and returns a token/session payload.
+    // Open to everyone — this is how a user gets a token in the first place.
     [HttpPost("login")]
     public ActionResult<AuthSessionDto> Login([FromBody] LoginRequest request)
     {
@@ -25,17 +25,16 @@ public class AuthController : ControllerBase
         return session is null ? Unauthorized() : Ok(session);
     }
 
-    // Demo-only endpoint that pretends to start the forgot-password flow.
     [HttpPost("forgot-password")]
     public ActionResult<ApiMessageResponse> ForgotPassword([FromBody] ForgotPasswordRequest request)
         => Ok(_authService.ForgotPassword(request));
 
-    // Demo-only OTP verification endpoint.
     [HttpPost("verify-otp")]
     public ActionResult<ApiMessageResponse> VerifyOtp([FromBody] VerifyOtpRequest request)
         => Ok(_authService.VerifyOtp(request));
 
-    // Updates the current user's profile fields.
+    // Requires login — a user can only update their own profile.
+    [Authorize]
     [HttpPut("profile")]
     public ActionResult<AuthUserDto> UpdateProfile([FromBody] UpdateProfileRequest request)
     {
@@ -43,7 +42,8 @@ public class AuthController : ControllerBase
         return user is null ? NotFound() : Ok(user);
     }
 
-    // Changes the current user's password after confirming the old one.
+    // Requires login — a user can only change their own password.
+    [Authorize]
     [HttpPut("password")]
     public ActionResult<ApiMessageResponse> UpdatePassword([FromBody] UpdatePasswordRequest request)
     {
@@ -51,11 +51,18 @@ public class AuthController : ControllerBase
         return result is null ? Unauthorized() : Ok(result);
     }
 
-    // Admin endpoint that changes another user's role and permissions.
+    // Admin-only — changing someone else's role/permissions is a privileged action.
+    [Authorize(Roles = "Admin")]
     [HttpPut("users/{userId:guid}/role")]
     public ActionResult<AuthUserDto> UpdateUserRole(Guid userId, [FromBody] UpdateUserRoleRequest request)
     {
         var user = _authService.UpdateUserRole(userId, request);
         return user is null ? NotFound() : Ok(user);
     }
+
+    // Admin-only — lists every login-capable account, including sensitive role/permission data.
+    [Authorize(Roles = "Admin")]
+    [HttpGet("users")]
+    public ActionResult<IReadOnlyList<AuthUserDto>> GetUsers()
+        => Ok(_authService.GetUsers());
 }

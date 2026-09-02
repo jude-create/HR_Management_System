@@ -1,10 +1,12 @@
 using HR_Management_System.Dtos.Notifications;
 using HR_Management_System.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
 
 // NotificationsController returns and updates notification records.
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class NotificationsController : ControllerBase
