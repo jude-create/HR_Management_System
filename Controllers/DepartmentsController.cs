@@ -25,11 +25,15 @@ public class DepartmentsController : ControllerBase
         => Ok(_departmentService.GetDepartments());
 
     // Returns one department and its members.
-    [HttpGet("{id:guid}")]
-    public ActionResult<DepartmentDetailDto> GetDepartment(Guid id)
+    [HttpGet("{slug}")]
+    public ActionResult<DepartmentDetailDto> GetDepartment(string slug)
     {
-        var department = _departmentService.GetDepartment(id);
-        return department is null ? NotFound() : Ok(department);
+        var department = _departmentService.GetDepartment(slug);
+
+        if (department is null)
+            return NotFound();
+
+        return Ok(department);
     }
 
     // Creates a new department.

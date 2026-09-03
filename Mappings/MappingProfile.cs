@@ -29,7 +29,8 @@ public class MappingProfile : Profile
             .ForCtorParam("DepartmentName", opt => opt.MapFrom(src => src.Department.Name));
 
         CreateMap<Department, DepartmentDto>()
-            .ForCtorParam("MemberCount", opt => opt.MapFrom(src => src.Employees.Count));
+        .ForCtorParam("MemberCount", opt => opt.MapFrom(src => src.Employees.Count))
+       .ForCtorParam("Members", opt => opt.MapFrom(src => src.Employees.Take(5)));
 
         CreateMap<Department, DepartmentDetailDto>()
             .ForCtorParam("Members", opt => opt.MapFrom(src => src.Employees));

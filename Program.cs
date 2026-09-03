@@ -65,6 +65,18 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddEndpointsApiExplorer();
 //builder.Services.AddSwaggerGen();
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
@@ -120,6 +132,7 @@ if (app.Environment.IsDevelopment())
 // Redirect HTTP requests to HTTPS.
 app.UseHttpsRedirection();
 
+app.UseCors("Frontend");
 // Authentication must run before authorization — it establishes who the caller is.
 app.UseAuthentication();
 

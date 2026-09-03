@@ -11,7 +11,7 @@ namespace HR_Management_System.Services;
 public interface IDepartmentService
 {
     IReadOnlyList<DepartmentDto> GetDepartments();
-    DepartmentDetailDto? GetDepartment(Guid id);
+    DepartmentDetailDto? GetDepartment(string slug);
     DepartmentResult CreateDepartment(DepartmentUpsertRequest request);
     DepartmentResult UpdateDepartment(Guid id, DepartmentUpsertRequest request);
     DeleteDepartmentResult DeleteDepartment(Guid id);
@@ -39,12 +39,12 @@ public sealed class DepartmentService : IDepartmentService
         return _mapper.Map<List<DepartmentDto>>(departments);
     }
 
-    public DepartmentDetailDto? GetDepartment(Guid id)
+    public DepartmentDetailDto? GetDepartment(string slug)
     {
         var department = _context.Departments
             .Include(x => x.Employees)
             .AsNoTracking()
-            .FirstOrDefault(x => x.Id == id);
+            .FirstOrDefault(x => x.Slug == slug);
         return department is null ? null : _mapper.Map<DepartmentDetailDto>(department);
     }
 

@@ -21,8 +21,21 @@ public class AttendanceController : ControllerBase
 
     // Returns the latest attendance entries.
     [HttpGet]
-    public ActionResult<IReadOnlyList<AttendanceDto>> GetAttendance()
-        => Ok(_attendanceService.GetAttendance());
+    public ActionResult<PagedResponse<AttendanceDto>> GetAttendance(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10,
+    [FromQuery] string? search = null,
+    [FromQuery] DateOnly? date = null)
+    {
+        var result = _attendanceService.GetAttendance(
+            page,
+            pageSize,
+            search,
+            date
+        );
+
+        return Ok(result);
+    }
 
     // Marks an attendance record for correction review.
     [HttpPost("{id:guid}/correction")]
