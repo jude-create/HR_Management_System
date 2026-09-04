@@ -19,10 +19,16 @@ public class PayrollController : ControllerBase
         _payrollService = payrollService;
     }
 
-    // Returns payroll records.
     [HttpGet]
-    public ActionResult<IReadOnlyList<PayrollDto>> GetPayrolls()
-        => Ok(_payrollService.GetPayrolls());
+    public ActionResult<PagedResponse<PayrollDto>> GetPayrolls(
+        [FromQuery] string? period = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var result = _payrollService.GetPayrolls(period, page, pageSize);
+
+        return Ok(result);
+    }
 
     // Generates payroll records for the requested period.
     [HttpPost("generate")]

@@ -94,9 +94,19 @@ public class RecruitmentController : ControllerBase
     }
 
     [HttpGet("candidates")]
-    public ActionResult<IReadOnlyList<CandidateDto>> GetCandidates()
-        => Ok(_recruitmentService.GetCandidates());
+    public ActionResult<PagedResponse<CandidateDto>> GetCandidates(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10,
+    [FromQuery] string? search = null)
+    {
+        var result = _recruitmentService.GetCandidates(
+            page,
+            pageSize,
+            search
+        );
 
+        return Ok(result);
+    }
     // Returns one candidate.
     [HttpGet("candidates/{id:guid}")]
     public ActionResult<CandidateDto> GetCandidate(Guid id)

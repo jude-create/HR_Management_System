@@ -16,7 +16,11 @@ public interface IRecruitmentService
     JobResult UpdateJob(Guid id, JobUpsertRequest request);
     JobResult UpdateJobStatus(Guid id, JobStatusRequest request);
     DeleteJobResult DeleteJob(Guid id);
-    IReadOnlyList<CandidateDto> GetCandidates();
+    PagedResponse<CandidateDto> GetCandidates(
+     int page,
+     int pageSize,
+     string? search
+ );
     CandidateDto? GetCandidate(Guid id);
     CandidateResult UpdateCandidateStatus(Guid id, CandidateStatusRequest request);
     DeleteCandidateResult DeleteCandidate(Guid id);
@@ -150,14 +154,58 @@ public sealed class RecruitmentService : IRecruitmentService
         return DeleteJobResult.Ok();
     }
 
-    public IReadOnlyList<CandidateDto> GetCandidates()
+    public PagedResponse<CandidateDto> GetCandidates(
+     int page,
+     int pageSize,
+     string? search)
     {
-        var candidates = _context.Candidates
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = _context.Candidates
             .Include(x => x.Job)
             .AsNoTracking()
-            .OrderByDescending(x => x.AppliedDate)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchTerm = search.Trim().ToLower();
+
+            query = query.Where(x =>
+                x.Name.ToLower().Contains(searchTerm) ||
+                x.Email.ToLower().Contains(searchTerm) ||
+                x.PhoneNumber.ToLower().Contains(searchTerm) ||
+                x.Job.Title.ToLower().Contains(searchTerm)
+            );
+        }
+
+        query = query
+            .OrderByDescending(x => x.AppliedDate);
+
+        var totalCount = query.Count();
+
+        var candidates = query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToList();
-        return _mapper.Map<List<CandidateDto>>(candidates);
+
+        var data = _mapper.Map<List<CandidateDto>>(candidates);
+
+        var totalPages = totalCount == 0
+            ? 0
+            : (int)Math.Ceiling(
+                totalCount / (double)pageSize
+            );
+
+        return new PagedResponse<CandidateDto>(
+            data,
+            new PageMeta(
+                page,
+                pageSize,
+                totalCount,
+                totalPages
+            )
+        );
     }
 
     public CandidateDto? GetCandidate(Guid id)

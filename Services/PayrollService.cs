@@ -10,7 +10,11 @@ namespace HR_Management_System.Services;
 // PayrollService calculates and manages payroll data.
 public interface IPayrollService
 {
-    IReadOnlyList<PayrollDto> GetPayrolls();
+    PagedResponse<PayrollDto> GetPayrolls(
+        string? period,
+        int page,
+        int pageSize
+    );
     IReadOnlyList<PayrollDto> GeneratePayrolls(PayrollGenerateRequest request);
     ApiMessageResponse ExportPayroll(PayrollExportRequest request);
     DeletePayrollResult DeletePayroll(Guid id);
@@ -28,16 +32,50 @@ public sealed class PayrollService : IPayrollService
         _mapper = mapper;
     }
 
-    public IReadOnlyList<PayrollDto> GetPayrolls()
+    public PagedResponse<PayrollDto> GetPayrolls(
+    string? period,
+    int page,
+    int pageSize)
     {
-        var payrolls = _context.Payrolls
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = _context.Payrolls
             .Include(x => x.Employee)
             .AsNoTracking()
-            .OrderByDescending(x => x.Period)
-            .ToList();
-        return _mapper.Map<List<PayrollDto>>(payrolls);
-    }
+            .AsQueryable();
 
+        // Filter by payroll period when supplied
+        if (!string.IsNullOrWhiteSpace(period))
+        {
+            query = query.Where(x => x.Period == period);
+        }
+
+        var totalCount = query.Count();
+
+        var totalPages = totalCount == 0
+            ? 0
+            : (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        var payrolls = query
+            .OrderByDescending(x => x.Period)
+           .ThenBy(x => x.Employee.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        var data = _mapper.Map<List<PayrollDto>>(payrolls);
+
+        return new PagedResponse<PayrollDto>(
+            data,
+            new PageMeta(
+                page,
+                pageSize,
+                totalCount,
+                totalPages
+            )
+        );
+    }
     public IReadOnlyList<PayrollDto> GeneratePayrolls(PayrollGenerateRequest request)
     {
         // Payroll is only generated for active employees.
