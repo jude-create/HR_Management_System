@@ -1,11 +1,10 @@
+
 using AutoMapper;
 using HR_Management_System.Data;
 using HR_Management_System.Dtos.Attendance;
 using HR_Management_System.Dtos.Common;
 using HR_Management_System.Entities;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HR_Management_System.Services;
 
@@ -16,7 +15,9 @@ public interface IAttendanceService
         int page,
         int pageSize,
         string? search,
-        DateOnly? date
+        DateOnly? date,
+        DateOnly? fromDate,
+        DateOnly? toDate
     );
 
     AttendanceResult RequestAttendanceCorrection(
@@ -27,7 +28,6 @@ public interface IAttendanceService
     DeleteAttendanceResult DeleteAttendance(Guid id);
 }
 
-// This module is separate because attendance usually grows with approval logic later.
 public sealed class AttendanceService : IAttendanceService
 {
     private readonly AppDbContext _context;
@@ -40,11 +40,14 @@ public sealed class AttendanceService : IAttendanceService
     }
 
     public PagedResponse<AttendanceDto> GetAttendance(
-    int page,
-    int pageSize,
-    string? search,
-    DateOnly? date)
-{
+        int page,
+        int pageSize,
+        string? search,
+        DateOnly? date,
+        DateOnly? fromDate,
+        DateOnly? toDate
+    )
+    {
         page = Math.Max(page, 1);
         pageSize = Math.Clamp(pageSize, 1, 100);
 
@@ -63,10 +66,21 @@ public sealed class AttendanceService : IAttendanceService
             );
         }
 
-        // Filter by date
+        // Filter by exact date
         if (date.HasValue)
         {
             query = query.Where(x => x.Date == date.Value);
+        }
+
+        // Filter by date range
+        if (fromDate.HasValue)
+        {
+            query = query.Where(x => x.Date >= fromDate.Value);
+        }
+
+        if (toDate.HasValue)
+        {
+            query = query.Where(x => x.Date <= toDate.Value);
         }
 
         // Most recent attendance first
@@ -83,9 +97,9 @@ public sealed class AttendanceService : IAttendanceService
 
         var data = _mapper.Map<List<AttendanceDto>>(attendance);
 
-        var totalPages = (int)Math.Ceiling(
-            totalCount / (double)pageSize
-        );
+        var totalPages = totalCount == 0
+            ? 1
+            : (int)Math.Ceiling(totalCount / (double)pageSize);
 
         var meta = new PageMeta(
             page,
@@ -100,32 +114,46 @@ public sealed class AttendanceService : IAttendanceService
         );
     }
 
-    public AttendanceResult RequestAttendanceCorrection(Guid id, AttendanceCorrectionRequest request)
+    public AttendanceResult RequestAttendanceCorrection(
+        Guid id,
+        AttendanceCorrectionRequest request)
     {
         var attendance = _context.AttendanceRecords
             .Include(x => x.Employee)
             .FirstOrDefault(x => x.Id == id);
+
         if (attendance is null)
         {
-            return AttendanceResult.Fail(AttendanceOperationError.NotFound);
+            return AttendanceResult.Fail(
+                AttendanceOperationError.NotFound
+            );
         }
 
         attendance.CorrectionStatus = CorrectionStatus.Pending;
         attendance.CorrectionReason = request.Reason.Trim();
+
         _context.SaveChanges();
-        return AttendanceResult.Success(_mapper.Map<AttendanceDto>(attendance));
+
+        return AttendanceResult.Success(
+            _mapper.Map<AttendanceDto>(attendance)
+        );
     }
 
     public DeleteAttendanceResult DeleteAttendance(Guid id)
     {
-        var attendance = _context.AttendanceRecords.FirstOrDefault(x => x.Id == id);
+        var attendance = _context.AttendanceRecords
+            .FirstOrDefault(x => x.Id == id);
+
         if (attendance is null)
         {
-            return DeleteAttendanceResult.Fail(AttendanceOperationError.NotFound);
+            return DeleteAttendanceResult.Fail(
+                AttendanceOperationError.NotFound
+            );
         }
 
         _context.AttendanceRecords.Remove(attendance);
         _context.SaveChanges();
+
         return DeleteAttendanceResult.Ok();
     }
 }

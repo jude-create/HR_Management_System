@@ -16,6 +16,8 @@ public sealed class AppDbContext : DbContext
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Job> Jobs => Set<Job>();
+
+    public DbSet<CalendarEvent> CalendarEvents => Set<CalendarEvent>();
     public DbSet<Candidate> Candidates => Set<Candidate>();
     public DbSet<Payroll> Payrolls => Set<Payroll>();
     public DbSet<Notification> Notifications => Set<Notification>();
@@ -83,5 +85,11 @@ public sealed class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+     modelBuilder.Entity<CalendarEvent>()
+    .HasOne(x => x.User)
+    .WithMany()
+    .HasForeignKey(x => x.UserId)
+    .OnDelete(DeleteBehavior.Cascade);
     }
 }

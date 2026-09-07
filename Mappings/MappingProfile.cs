@@ -1,6 +1,7 @@
 using AutoMapper;
 using HR_Management_System.Dtos.Attendance;
 using HR_Management_System.Dtos.Auth;
+using HR_Management_System.Dtos.Calendar;
 using HR_Management_System.Dtos.Employees;
 using HR_Management_System.Dtos.Holidays;
 using HR_Management_System.Dtos.Notifications;
@@ -57,6 +58,10 @@ public class MappingProfile : Profile
         CreateMap<Holiday, HolidayDto>()
             .ForCtorParam("DayOfWeek", opt => opt.MapFrom(src => src.Date.DayOfWeek.ToString()))
             .ForCtorParam("Type", opt => opt.MapFrom(src => src.Type.ToString()));
+
+        CreateMap<CalendarEvent, CalendarEventDto>()
+           .ForCtorParam(
+           "Type", opt => opt.MapFrom(src => src.Type.ToString()));
 
         CreateMap<Attendance, AttendanceDto>()
             .ForCtorParam("EmployeeName", opt => opt.MapFrom(src => src.Employee.Name))

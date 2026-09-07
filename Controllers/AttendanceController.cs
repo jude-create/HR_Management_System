@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
 
-// AttendanceController manages attendance list and correction requests.
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
@@ -19,23 +18,28 @@ public class AttendanceController : ControllerBase
         _attendanceService = attendanceService;
     }
 
-    // Returns the latest attendance entries.
     [HttpGet]
     public ActionResult<PagedResponse<AttendanceDto>> GetAttendance(
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 10,
-    [FromQuery] string? search = null,
-    [FromQuery] DateOnly? date = null)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null,
+        [FromQuery] DateOnly? date = null,
+        [FromQuery] DateOnly? fromDate = null,
+        [FromQuery] DateOnly? toDate = null)
     {
-        var result = _attendanceService.GetAttendance(
-            page,
-            pageSize,
-            search,
-            date
+        return Ok(
+            _attendanceService.GetAttendance(
+                page,
+                pageSize,
+                search,
+                date,
+                fromDate,
+                toDate
+            )
         );
-
-        return Ok(result);
     }
+
+   
 
     // Marks an attendance record for correction review.
     [HttpPost("{id:guid}/correction")]
