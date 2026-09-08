@@ -120,39 +120,125 @@ internal static class AppDbSeeder
             new Employee
             {
                 Id = DemoSeedData.Employee1Id,
+                EmployeeNumber = "EMP-000001",
                 Name = "Seyi Johnson",
-                Title = "Senior Backend Engineer",
                 Email = "seyi.johnson@hr.local",
+                Mobile = "+234 801 234 5678",
+                DateOfBirth = new DateTime(1994, 5, 18, 0, 0, 0, DateTimeKind.Utc),
+                Gender = "Male",
+                Nationality = "Nigerian",
+                Address = "15 Admiralty Way",
+                City = "Lagos",
+                State = "Lagos",
+                ZipCode = "101233",
                 AvatarUrl = "https://i.pravatar.cc/160?img=12",
+                Title = "Senior Backend Engineer",
                 Type = EmployeeType.FullTime,
                 Status = EmployeeStatus.Active,
-                HiredAt = DateTime.UtcNow.AddYears(-2),
+                JoiningDate = DateTime.UtcNow.AddYears(-2),
+                OfficeLocation = "Lagos HQ",
                 DepartmentId = engineering.Id
             },
-            new Employee
-            {
-                Id = DemoSeedData.Employee2Id,
-                Name = "Mariam Yusuf",
-                Title = "People Partner",
-                Email = "mariam.yusuf@hr.local",
-                AvatarUrl = "https://i.pravatar.cc/160?img=32",
-                Type = EmployeeType.FullTime,
-                Status = EmployeeStatus.Active,
-                HiredAt = DateTime.UtcNow.AddYears(-1),
-                DepartmentId = peopleOps.Id
-            },
-            new Employee
-            {
-                Id = DemoSeedData.Employee3Id,
-                Name = "Kelechi Okafor",
-                Title = "Finance Analyst",
-                Email = "kelechi.okafor@hr.local",
-                AvatarUrl = "https://i.pravatar.cc/160?img=52",
-                Type = EmployeeType.Contract,
-                Status = EmployeeStatus.OnLeave,
-                HiredAt = DateTime.UtcNow.AddMonths(-8),
-                DepartmentId = finance.Id
-            },
+
+new Employee
+{
+    Id = DemoSeedData.Employee2Id,
+    EmployeeNumber = "EMP-000002",
+    Name = "Mariam Yusuf",
+    Email = "mariam.yusuf@hr.local",
+    Mobile = "+234 802 345 6789",
+    DateOfBirth = new DateTime(1991, 9, 7, 0, 0, 0, DateTimeKind.Utc),
+    Gender = "Female",
+    Nationality = "Nigerian",
+    Address = "22 Ahmadu Bello Way",
+    City = "Abuja",
+    State = "FCT",
+    ZipCode = "900211",
+    AvatarUrl = "https://i.pravatar.cc/160?img=32",
+    Title = "People Partner",
+    Type = EmployeeType.FullTime,
+    Status = EmployeeStatus.Active,
+    JoiningDate = DateTime.UtcNow.AddYears(-1),
+    OfficeLocation = "Abuja Office",
+    DepartmentId = peopleOps.Id
+},
+
+new Employee
+{
+    Id = DemoSeedData.Employee3Id,
+    EmployeeNumber = "EMP-000003",
+    Name = "Kelechi Okafor",
+    Email = "kelechi.okafor@hr.local",
+    Mobile = "+234 803 456 7890",
+    DateOfBirth = new DateTime(1997, 2, 25, 0, 0, 0, DateTimeKind.Utc),
+    Gender = "Male",
+    Nationality = "Nigerian",
+    Address = "8 Independence Layout",
+    City = "Enugu",
+    State = "Enugu",
+    ZipCode = "400102",
+    AvatarUrl = "https://i.pravatar.cc/160?img=52",
+    Title = "Finance Analyst",
+    Type = EmployeeType.Contract,
+    Status = EmployeeStatus.OnLeave,
+    JoiningDate = DateTime.UtcNow.AddMonths(-8),
+    OfficeLocation = "Enugu Branch",
+    DepartmentId = finance.Id
+},
+
+        new EmployeeLinks
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = DemoSeedData.Employee1Id,
+            SlackId = "seyi.johnson",
+            SkypeId = "seyi.johnson",
+            GithubId = "seyijohnson"
+        },
+new EmployeeLinks
+{
+    Id = Guid.NewGuid(),
+    EmployeeId = DemoSeedData.Employee2Id,
+    SlackId = "mariam.yusuf",
+    SkypeId = "mariam.yusuf",
+    GithubId = "mariamyusuf"
+},
+new EmployeeLinks
+{
+    Id = Guid.NewGuid(),
+    EmployeeId = DemoSeedData.Employee3Id,
+    SlackId = "kelechi.okafor",
+    SkypeId = "kelechi.okafor",
+    GithubId = "kelechiokafor"
+},
+
+      new EmployeeDocument
+      {
+          Id = Guid.NewGuid(),
+          EmployeeId = DemoSeedData.Employee1Id,
+          DocumentType = "Contract",
+          FileName = "seyi-employment-contract.pdf",
+          FileUrl = "https://example.com/documents/seyi-employment-contract.pdf",
+          UploadedAt = DateTime.UtcNow.AddMonths(-18)
+      },
+new EmployeeDocument
+{
+    Id = Guid.NewGuid(),
+    EmployeeId = DemoSeedData.Employee1Id,
+    DocumentType = "ID",
+    FileName = "seyi-id.pdf",
+    FileUrl = "https://example.com/documents/seyi-id.pdf",
+    UploadedAt = DateTime.UtcNow.AddMonths(-18)
+},
+new EmployeeDocument
+{
+    Id = Guid.NewGuid(),
+    EmployeeId = DemoSeedData.Employee2Id,
+    DocumentType = "Contract",
+    FileName = "mariam-employment-contract.pdf",
+    FileUrl = "https://example.com/documents/mariam-employment-contract.pdf",
+    UploadedAt = DateTime.UtcNow.AddMonths(-12)
+},
+
             new Job
             {
                 Id = DemoSeedData.Job1Id,

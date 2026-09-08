@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HR_Management_System.Controllers;
 
-// EmployeesController handles employee CRUD and paging.
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
@@ -14,70 +13,200 @@ public class EmployeesController : ControllerBase
 {
     private readonly IEmployeeService _employeeService;
 
-    public EmployeesController(IEmployeeService employeeService)
+    public EmployeesController(
+        IEmployeeService employeeService)
     {
         _employeeService = employeeService;
     }
 
-    // Returns a paged employee list for table/grid views.
+    // GET: api/employees
     [HttpGet]
-    public ActionResult<PagedResponse<EmployeeDto>> GetEmployees([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
-        => Ok(_employeeService.GetEmployees(page, pageSize));
+    public ActionResult<PagedResponse<EmployeeDto>> GetEmployees(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        return Ok(
+            _employeeService.GetEmployees(
+                page,
+                pageSize));
+    }
 
-    // Returns one employee by ID.
+    // GET: api/employees/{id}
     [HttpGet("{id:guid}")]
     public ActionResult<EmployeeDto> GetEmployee(Guid id)
     {
-        var employee = _employeeService.GetEmployee(id);
-        return employee is null ? NotFound() : Ok(employee);
+        var employee =
+            _employeeService.GetEmployee(id);
+
+        if (employee is null)
+        {
+            return NotFound(
+                new
+                {
+                    message = "Employee not found."
+                });
+        }
+
+        return Ok(employee);
     }
 
-    // Creates a new employee record.
+    // POST: api/employees
     [HttpPost]
-    public ActionResult<EmployeeDto> CreateEmployee([FromBody] EmployeeUpsertRequest request)
+    public ActionResult<EmployeeDto> CreateEmployee(
+        [FromBody] CreateEmployeeRequest request)
     {
-        var result = _employeeService.CreateEmployee(request);
+        var result =
+            _employeeService.CreateEmployee(request);
 
         return result.Error switch
         {
-            EmployeeOperationError.None => Ok(result.Employee),
-            EmployeeOperationError.InvalidDepartment => BadRequest("Department does not exist."),
-            EmployeeOperationError.InvalidType => BadRequest("Invalid employee type."),
-            EmployeeOperationError.InvalidStatus => BadRequest("Invalid employee status."),
-            _ => BadRequest("Invalid employee payload.")
+            EmployeeOperationError.None =>
+                Ok(result.Employee),
+
+            EmployeeOperationError.InvalidDepartment =>
+                BadRequest(
+                    new
+                    {
+                        message =
+                            "Department does not exist."
+                    }),
+
+            EmployeeOperationError.InvalidType =>
+                BadRequest(
+                    new
+                    {
+                        message =
+                            "Invalid employee type."
+                    }),
+
+            EmployeeOperationError.InvalidStatus =>
+                BadRequest(
+                    new
+                    {
+                        message =
+                            "Invalid employee status."
+                    }),
+
+            EmployeeOperationError.DuplicateEmail =>
+                Conflict(
+                    new
+                    {
+                        message =
+                            "An employee with this email already exists."
+                    }),
+
+            _ =>
+                BadRequest(
+                    new
+                    {
+                        message =
+                            "Invalid employee payload."
+                    })
         };
     }
 
-    // Updates an existing employee record.
+    // PUT: api/employees/{id}
     [HttpPut("{id:guid}")]
-    public ActionResult<EmployeeDto> UpdateEmployee(Guid id, [FromBody] EmployeeUpsertRequest request)
+    public ActionResult<EmployeeDto> UpdateEmployee(
+        Guid id,
+        [FromBody] UpdateEmployeeRequest request)
     {
-        var result = _employeeService.UpdateEmployee(id, request);
+        var result =
+            _employeeService.UpdateEmployee(
+                id,
+                request);
 
         return result.Error switch
         {
-            EmployeeOperationError.None => Ok(result.Employee),
-            EmployeeOperationError.NotFound => NotFound("Employee not found."),
-            EmployeeOperationError.InvalidDepartment => BadRequest("Department does not exist."),
-            EmployeeOperationError.InvalidType => BadRequest("Invalid employee type."),
-            EmployeeOperationError.InvalidStatus => BadRequest("Invalid employee status."),
-            _ => BadRequest("Invalid employee payload.")
+            EmployeeOperationError.None =>
+                Ok(result.Employee),
+
+            EmployeeOperationError.NotFound =>
+                NotFound(
+                    new
+                    {
+                        message =
+                            "Employee not found."
+                    }),
+
+            EmployeeOperationError.InvalidDepartment =>
+                BadRequest(
+                    new
+                    {
+                        message =
+                            "Department does not exist."
+                    }),
+
+            EmployeeOperationError.InvalidType =>
+                BadRequest(
+                    new
+                    {
+                        message =
+                            "Invalid employee type."
+                    }),
+
+            EmployeeOperationError.InvalidStatus =>
+                BadRequest(
+                    new
+                    {
+                        message =
+                            "Invalid employee status."
+                    }),
+
+            EmployeeOperationError.DuplicateEmail =>
+                Conflict(
+                    new
+                    {
+                        message =
+                            "An employee with this email already exists."
+                    }),
+
+            _ =>
+                BadRequest(
+                    new
+                    {
+                        message =
+                            "Invalid employee payload."
+                    })
         };
     }
 
-    // Deletes an employee if no dependent records block it.
-    [Authorize(Roles = "Admin")]
+    // DELETE: api/employees/{id}
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteEmployee(Guid id)
     {
-        var result = _employeeService.DeleteEmployee(id);
+        var result =
+            _employeeService.DeleteEmployee(id);
 
         return result.Error switch
         {
-            EmployeeOperationError.None => NoContent(),
-            EmployeeOperationError.NotFound => NotFound("Employee not found."),
-            EmployeeOperationError.HasDependencies => Conflict("Linked payroll/attendance records still exist."),
-            _ => BadRequest("Unable to delete employee.")
+            EmployeeOperationError.None =>
+                NoContent(),
+
+            EmployeeOperationError.NotFound =>
+                NotFound(
+                    new
+                    {
+                        message =
+                            "Employee not found."
+                    }),
+
+            EmployeeOperationError.HasDependencies =>
+                Conflict(
+                    new
+                    {
+                        message =
+                            "Linked payroll or attendance records still exist."
+                    }),
+
+            _ =>
+                BadRequest(
+                    new
+                    {
+                        message =
+                            "Unable to delete employee."
+                    })
         };
     }
 }

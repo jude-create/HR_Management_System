@@ -11,7 +11,9 @@ public enum EmployeeOperationError
     InvalidDepartment,
     InvalidType,
     InvalidStatus,
-    HasDependencies // used for delete: employee still has payroll/attendance records
+    HasDependencies,// used for delete: employee still has payroll/attendance records
+    DuplicateEmail,
+    
 }
 
 public sealed record EmployeeResult(EmployeeDto? Employee, EmployeeOperationError Error)

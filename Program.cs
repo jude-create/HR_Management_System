@@ -60,6 +60,7 @@ builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ICalendarService, CalendarService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
+builder.Services.AddScoped<IEmployeeNumberGenerator, EmployeeNumberGenerator>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 // Swagger gives us a simple UI for testing the API during development.
