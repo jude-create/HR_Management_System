@@ -39,7 +39,27 @@ public class AttendanceController : ControllerBase
         );
     }
 
-   
+
+    [HttpGet("employee/{employeeId:guid}")]
+    public ActionResult<PagedResponse<AttendanceDto>> GetEmployeeAttendance(
+    Guid employeeId,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10,
+    [FromQuery] DateOnly? fromDate = null,
+    [FromQuery] DateOnly? toDate = null)
+    {
+        return Ok(
+            _attendanceService.GetEmployeeAttendance(
+                employeeId,
+                page,
+                pageSize,
+                fromDate,
+                toDate
+            )
+        );
+    }
+
+
 
     // Marks an attendance record for correction review.
     [HttpPost("{id:guid}/correction")]

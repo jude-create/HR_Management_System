@@ -20,6 +20,14 @@ public interface IAttendanceService
         DateOnly? toDate
     );
 
+    PagedResponse<AttendanceDto> GetEmployeeAttendance(
+    Guid employeeId,
+    int page,
+    int pageSize,
+    DateOnly? fromDate,
+    DateOnly? toDate
+);
+
     AttendanceResult RequestAttendanceCorrection(
         Guid id,
         AttendanceCorrectionRequest request
@@ -114,6 +122,60 @@ public sealed class AttendanceService : IAttendanceService
         );
     }
 
+    public PagedResponse<AttendanceDto> GetEmployeeAttendance(
+    Guid employeeId,
+    int page,
+    int pageSize,
+    DateOnly? fromDate,
+    DateOnly? toDate)
+    {
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = _context.AttendanceRecords
+            .Include(x => x.Employee)
+            .AsNoTracking()
+            .Where(x => x.EmployeeId == employeeId);
+
+        if (fromDate.HasValue)
+        {
+            query = query.Where(x => x.Date >= fromDate.Value);
+        }
+
+        if (toDate.HasValue)
+        {
+            query = query.Where(x => x.Date <= toDate.Value);
+        }
+
+        query = query
+            .OrderByDescending(x => x.Date)
+            .ThenByDescending(x => x.CheckIn);
+
+        var totalCount = query.Count();
+
+        var attendance = query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        var data = _mapper.Map<List<AttendanceDto>>(attendance);
+
+        var totalPages = totalCount == 0
+            ? 1
+            : (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        var meta = new PageMeta(
+            page,
+            pageSize,
+            totalCount,
+            totalPages
+        );
+
+        return new PagedResponse<AttendanceDto>(
+            data,
+            meta
+        );
+    }
     public AttendanceResult RequestAttendanceCorrection(
         Guid id,
         AttendanceCorrectionRequest request)

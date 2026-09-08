@@ -388,7 +388,7 @@ new EmployeeDocument
                 CheckOut = new TimeOnly(17, 10),
                 Type = AttendanceType.Remote,
                 Status = AttendanceStatus.Late,
-                CorrectionStatus = CorrectionStatus.Pending
+                CorrectionStatus = CorrectionStatus.None
             },
             new Attendance
             {
