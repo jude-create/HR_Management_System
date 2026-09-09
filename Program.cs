@@ -57,6 +57,7 @@ builder.Services.AddScoped<IPayrollService, PayrollService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IHolidayService, HolidayService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceService>();
+builder.Services.AddScoped<ILeaveService, LeaveService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ICalendarService, CalendarService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();

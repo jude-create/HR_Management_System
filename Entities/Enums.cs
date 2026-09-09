@@ -19,3 +19,10 @@ public enum NotificationActionType { Info, Approval, Alert, Reminder }
 
 public enum UserRole { Admin, HrManager, Employee }
 public enum AppearanceMode { Light, Dark, System }
+
+public enum LeaveStatus
+{
+    Pending,
+    Approved,
+    Rejected
+}

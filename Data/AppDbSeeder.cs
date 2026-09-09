@@ -399,6 +399,46 @@ new EmployeeDocument
                 Status = AttendanceStatus.OnLeave,
                 CorrectionStatus = CorrectionStatus.None
             });
+          
+        context.Leaves.AddRange(
+    new Leave
+    {
+        Id = Guid.NewGuid(),
+        EmployeeId = DemoSeedData.Employee1Id,
+        LeaveType = "Annual Leave",
+        StartDate = new DateOnly(2026, 9, 10),
+        EndDate = new DateOnly(2026, 9, 13),
+        Days = 4,
+        ReportingManager = "Mark Williams",
+        Status = LeaveStatus.Approved
+    },
+
+    new Leave
+    {
+        Id = Guid.NewGuid(),
+        EmployeeId = DemoSeedData.Employee1Id,
+        LeaveType = "Sick Leave",
+        StartDate = new DateOnly(2026, 8, 21),
+        EndDate = new DateOnly(2026, 8, 22),
+        Days = 2,
+        ReportingManager = "Mark Williams",
+        Status = LeaveStatus.Approved
+    },
+
+    new Leave
+    {
+        Id = Guid.NewGuid(),
+        EmployeeId = DemoSeedData.Employee2Id,
+        LeaveType = "Casual Leave",
+        StartDate = new DateOnly(2026, 7, 5),
+        EndDate = new DateOnly(2026, 7, 5),
+        Days = 1,
+        ReportingManager = "Mark Williams",
+        Status = LeaveStatus.Pending
+    });
+
+        
+           
 
         context.SaveChanges();
     }

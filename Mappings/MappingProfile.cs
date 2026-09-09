@@ -4,6 +4,7 @@ using HR_Management_System.Dtos.Auth;
 using HR_Management_System.Dtos.Calendar;
 using HR_Management_System.Dtos.Employees;
 using HR_Management_System.Dtos.Holidays;
+using HR_Management_System.Dtos.Leaves;
 using HR_Management_System.Dtos.Notifications;
 using HR_Management_System.Dtos.Payroll;
 using HR_Management_System.Dtos.Recruitment;
@@ -66,6 +67,12 @@ public class MappingProfile : Profile
         CreateMap<CalendarEvent, CalendarEventDto>()
            .ForCtorParam(
            "Type", opt => opt.MapFrom(src => src.Type.ToString()));
+
+        CreateMap<Leave, LeaveDto>()
+          .ForCtorParam(
+           "Status",
+           opt => opt.MapFrom(src => src.Status.ToString())
+         );
 
         CreateMap<Attendance, AttendanceDto>()
             .ForCtorParam("EmployeeName", opt => opt.MapFrom(src => src.Employee.Name))
