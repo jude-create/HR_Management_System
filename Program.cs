@@ -74,7 +74,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("Frontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins("http://localhost:5173",
+            "https://hr-management-one-inky.vercel.app"
+            )
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -126,11 +128,11 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Only expose Swagger in development so production stays clean.
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+//}
 
 // Redirect HTTP requests to HTTPS.
 app.UseHttpsRedirection();

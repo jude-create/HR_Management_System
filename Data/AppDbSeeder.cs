@@ -372,7 +372,7 @@ new EmployeeDocument
             {
                 Id = DemoSeedData.Attendance1Id,
                 EmployeeId = DemoSeedData.Employee1Id,
-                Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
+                Date = DateOnly.FromDateTime(DateTime.UtcNow),
                 CheckIn = new TimeOnly(8, 3),
                 CheckOut = new TimeOnly(17, 41),
                 Type = AttendanceType.Office,
@@ -383,7 +383,7 @@ new EmployeeDocument
             {
                 Id = DemoSeedData.Attendance2Id,
                 EmployeeId = DemoSeedData.Employee2Id,
-                Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
+                Date = DateOnly.FromDateTime(DateTime.UtcNow),
                 CheckIn = new TimeOnly(8, 50),
                 CheckOut = new TimeOnly(17, 10),
                 Type = AttendanceType.Remote,
@@ -394,7 +394,7 @@ new EmployeeDocument
             {
                 Id = DemoSeedData.Attendance3Id,
                 EmployeeId = DemoSeedData.Employee3Id,
-                Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
+                Date = DateOnly.FromDateTime(DateTime.UtcNow),
                 Type = AttendanceType.FieldWork,
                 Status = AttendanceStatus.OnLeave,
                 CorrectionStatus = CorrectionStatus.None
