@@ -30,7 +30,8 @@ public interface IAttendanceService
 
     AttendanceResult RequestAttendanceCorrection(
         Guid id,
-        AttendanceCorrectionRequest request
+        AttendanceCorrectionRequest request,
+        Guid? loggedInEmployeeId
     );
 
     DeleteAttendanceResult DeleteAttendance(Guid id);
@@ -178,7 +179,9 @@ public sealed class AttendanceService : IAttendanceService
     }
     public AttendanceResult RequestAttendanceCorrection(
         Guid id,
-        AttendanceCorrectionRequest request)
+        AttendanceCorrectionRequest request,
+        Guid? loggedInEmployeeId
+        )
     {
         var attendance = _context.AttendanceRecords
             .Include(x => x.Employee)
@@ -188,6 +191,13 @@ public sealed class AttendanceService : IAttendanceService
         {
             return AttendanceResult.Fail(
                 AttendanceOperationError.NotFound
+            );
+        }
+        if (loggedInEmployeeId.HasValue &&
+    attendance.EmployeeId != loggedInEmployeeId.Value)
+        {
+            return AttendanceResult.Fail(
+                AttendanceOperationError.Unauthorized
             );
         }
 

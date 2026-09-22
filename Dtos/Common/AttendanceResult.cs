@@ -5,7 +5,8 @@ namespace HR_Management_System.Dtos.Common;
 public enum AttendanceOperationError
 {
     None,
-    NotFound
+    NotFound,
+    Unauthorized
 }
 
 public sealed record AttendanceResult(AttendanceDto? Attendance, AttendanceOperationError Error)

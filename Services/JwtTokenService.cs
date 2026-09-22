@@ -32,12 +32,20 @@ public sealed class JwtTokenService : IJwtTokenService
         expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
         var claims = new List<Claim>
+{
+    new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+    new(JwtRegisteredClaimNames.Email, user.Email),
+    new(ClaimTypes.Name, user.Name),
+    new(ClaimTypes.Role, user.Role.ToString())
+};
+
+        if (user.EmployeeId.HasValue)
         {
-            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email),
-            new(ClaimTypes.Name, user.Name),
-            new(ClaimTypes.Role, user.Role.ToString())
-        };
+            claims.Add(
+                new Claim(
+                    "employeeId",
+                    user.EmployeeId.Value.ToString()));
+        }
 
         // Permissions go in as their own claim type so services/controllers can check them individually.
         claims.AddRange(user.Permissions.Select(p => new Claim("permission", p)));

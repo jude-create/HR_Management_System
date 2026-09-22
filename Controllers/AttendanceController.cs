@@ -18,6 +18,7 @@ public class AttendanceController : ControllerBase
         _attendanceService = attendanceService;
     }
 
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpGet]
     public ActionResult<PagedResponse<AttendanceDto>> GetAttendance(
         [FromQuery] int page = 1,
@@ -39,15 +40,36 @@ public class AttendanceController : ControllerBase
         );
     }
 
-
     [HttpGet("employee/{employeeId:guid}")]
     public ActionResult<PagedResponse<AttendanceDto>> GetEmployeeAttendance(
-    Guid employeeId,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 10,
-    [FromQuery] DateOnly? fromDate = null,
-    [FromQuery] DateOnly? toDate = null)
+        Guid employeeId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] DateOnly? fromDate = null,
+        [FromQuery] DateOnly? toDate = null)
     {
+        var isAdminOrHr =
+            User.IsInRole("Admin") ||
+            User.IsInRole("HrManager");
+
+        if (!isAdminOrHr)
+        {
+            var employeeIdClaim =
+                User.FindFirst("employeeId")?.Value;
+
+            if (!Guid.TryParse(
+                    employeeIdClaim,
+                    out var loggedInEmployeeId))
+            {
+                return Forbid();
+            }
+
+            if (loggedInEmployeeId != employeeId)
+            {
+                return Forbid();
+            }
+        }
+
         return Ok(
             _attendanceService.GetEmployeeAttendance(
                 employeeId,
@@ -63,19 +85,55 @@ public class AttendanceController : ControllerBase
 
     // Marks an attendance record for correction review.
     [HttpPost("{id:guid}/correction")]
-    public ActionResult<AttendanceDto> RequestCorrection(Guid id, [FromBody] AttendanceCorrectionRequest request)
+    public ActionResult<AttendanceDto> RequestCorrection(
+    Guid id,
+    [FromBody] AttendanceCorrectionRequest request)
     {
-        var result = _attendanceService.RequestAttendanceCorrection(id, request);
+        var isAdminOrHr =
+            User.IsInRole("Admin") ||
+            User.IsInRole("HrManager");
+
+        Guid? loggedInEmployeeId = null;
+
+        if (!isAdminOrHr)
+        {
+            var employeeIdClaim =
+                User.FindFirst("employeeId")?.Value;
+
+            if (!Guid.TryParse(
+                    employeeIdClaim,
+                    out var employeeId))
+            {
+                return Forbid();
+            }
+
+            loggedInEmployeeId = employeeId;
+        }
+
+        var result =
+            _attendanceService.RequestAttendanceCorrection(
+                id,
+                request,
+                loggedInEmployeeId);
 
         return result.Error switch
         {
-            AttendanceOperationError.None => Ok(result.Attendance),
-            AttendanceOperationError.NotFound => NotFound("Attendance record not found."),
-            _ => BadRequest("Unable to process correction request.")
+            AttendanceOperationError.None =>
+                Ok(result.Attendance),
+
+            AttendanceOperationError.NotFound =>
+                NotFound("Attendance record not found."),
+
+            AttendanceOperationError.Unauthorized =>
+                Forbid(),
+
+            _ =>
+                BadRequest("Unable to process correction request.")
         };
     }
 
     // Deletes an attendance record.
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteAttendance(Guid id)
     {

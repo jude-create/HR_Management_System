@@ -94,7 +94,7 @@ public sealed class EmployeeService : IEmployeeService
     }
 
     public EmployeeResult CreateEmployee(
-        CreateEmployeeRequest request)
+     CreateEmployeeRequest request)
     {
         if (!HrServiceSupport.TryResolveEmployeeType(
                 request.Type,
@@ -121,13 +121,24 @@ public sealed class EmployeeService : IEmployeeService
                 EmployeeOperationError.InvalidDepartment);
         }
 
-        var emailExists = _context.Employees
-            .Any(x => x.Email.ToLower() == request.Email.ToLower());
+        var email = request.Email.Trim();
 
-        if (emailExists)
+        var employeeEmailExists = _context.Employees
+            .Any(x => x.Email.ToLower() == email.ToLower());
+
+        if (employeeEmailExists)
         {
             return EmployeeResult.Fail(
                 EmployeeOperationError.DuplicateEmail);
+        }
+
+        var userEmailExists = _context.Users
+            .Any(x => x.Email.ToLower() == email.ToLower());
+
+        if (userEmailExists)
+        {
+            return EmployeeResult.Fail(
+                EmployeeOperationError.DuplicateUserEmail);
         }
 
         var employee = new Employee
@@ -139,7 +150,7 @@ public sealed class EmployeeService : IEmployeeService
 
             Name = request.Name.Trim(),
 
-            Email = request.Email.Trim(),
+            Email = email,
 
             Mobile = request.Mobile?.Trim(),
 
@@ -196,14 +207,58 @@ public sealed class EmployeeService : IEmployeeService
             };
         }
 
-        _context.Employees.Add(employee);
+        // Create login account for the employee
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
 
+            Name = employee.Name,
+
+            Email = employee.Email,
+
+            // Temporary password for the current demo flow.
+            PasswordHash =
+                HrServiceSupport.HashPassword("Password123!"),
+
+            Role = UserRole.Employee,
+
+            Permissions = new List<string>(),
+
+            EmployeeId = employee.Id,
+
+            Employee = employee
+        };
+
+        // Create default settings for the employee account
+        user.Settings = new UserSettings
+        {
+            Id = Guid.NewGuid(),
+
+            User = user,
+
+            Appearance = AppearanceMode.System,
+
+            Language = "en",
+
+            TwoFactorEnabled = false,
+
+            MobilePushEnabled = true,
+
+            DesktopNotificationsEnabled = true,
+
+            EmailNotificationsEnabled = true
+        };
+
+        // Add everything to the DbContext
+        _context.Employees.Add(employee);
+        _context.Users.Add(user);
+
+        // Save Employee + User + UserSettings together
         _context.SaveChanges();
 
         return EmployeeResult.Success(
             _mapper.Map<EmployeeDto>(employee));
     }
-
     public EmployeeResult UpdateEmployee(
         Guid id,
         UpdateEmployeeRequest request)

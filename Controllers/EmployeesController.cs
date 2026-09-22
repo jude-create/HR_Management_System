@@ -51,6 +51,7 @@ public class EmployeesController : ControllerBase
     }
 
     // POST: api/employees
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpPost]
     public ActionResult<EmployeeDto> CreateEmployee(
         [FromBody] CreateEmployeeRequest request)
@@ -94,6 +95,14 @@ public class EmployeesController : ControllerBase
                         message =
                             "An employee with this email already exists."
                     }),
+
+            EmployeeOperationError.DuplicateUserEmail =>
+               Conflict(
+                    new
+                {
+                      message =
+        "A user account with this email already exists."
+                     }),
 
             _ =>
                 BadRequest(
@@ -168,6 +177,7 @@ public class EmployeesController : ControllerBase
                         message =
                             "Invalid employee payload."
                     })
+
         };
     }
 
