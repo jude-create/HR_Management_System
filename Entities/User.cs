@@ -5,11 +5,16 @@ public class User
 {
     public Guid Id { get; set; }
     public required string Name { get; set; }
-    public required string Email { get; set; } 
-    public required string PasswordHash { get; set; }  // never expose this in a DTO
+    public required string Email { get; set; }
+    public required string PasswordHash { get; set; }
     public UserRole Role { get; set; }
     public List<string> Permissions { get; set; } = new();
 
-    // 1-to-1: every user has exactly one settings row, created alongside the user.
+    // Employee account relationship.
+    // Admin and HR users will have this as null.
+    // Employee users will point to their Employee record.
+    public Guid? EmployeeId { get; set; }
+    public Employee? Employee { get; set; }
+
     public UserSettings Settings { get; set; } = null!;
 }

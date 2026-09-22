@@ -120,6 +120,12 @@ public sealed class AppDbContext : DbContext
             .HasForeignKey(x => x.JobId)
             .OnDelete(DeleteBehavior.Restrict);
 
+     modelBuilder.Entity<User>()
+    .HasOne(x => x.Employee)
+    .WithOne()
+    .HasForeignKey<User>(x => x.EmployeeId)
+    .OnDelete(DeleteBehavior.Restrict);
+
         // User -> Settings
         modelBuilder.Entity<User>()
             .HasOne(x => x.Settings)
