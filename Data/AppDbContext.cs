@@ -26,6 +26,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<Holiday> Holidays => Set<Holiday>();
 
     public DbSet<Leave> Leaves => Set<Leave>();
+    public DbSet<LeaveBalance> LeaveBalances => Set<LeaveBalance>();
     public DbSet<Attendance> AttendanceRecords => Set<Attendance>();
     public DbSet<UserSettings> UserSettings => Set<UserSettings>();
 
@@ -152,5 +153,20 @@ public sealed class AppDbContext : DbContext
     .WithMany()
     .HasForeignKey(x => x.EmployeeId)
     .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LeaveBalance>()
+    .HasOne(x => x.Employee)
+    .WithMany()
+    .HasForeignKey(x => x.EmployeeId)
+    .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LeaveBalance>()
+            .HasIndex(x => new
+            {
+                x.EmployeeId,
+                x.Year
+            })
+            .IsUnique();
+;
     }
 }

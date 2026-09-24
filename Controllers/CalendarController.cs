@@ -28,6 +28,7 @@ public class CalendarController : ControllerBase
         );
     }
 
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpPost]
     public ActionResult<CalendarEventDto> CreateEvent(
         [FromBody] CalendarEventCreateRequest request)
@@ -47,6 +48,7 @@ public class CalendarController : ControllerBase
         };
     }
 
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpPut("{id:guid}")]
     public ActionResult<CalendarEventDto> UpdateEvent(
         Guid id,
@@ -70,6 +72,7 @@ public class CalendarController : ControllerBase
         };
     }
 
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteEvent(Guid id)
     {

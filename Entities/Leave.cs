@@ -9,6 +9,7 @@ public class Leave
 
     public required string LeaveType { get; set; }
 
+    public string? Reason { get; set; }
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
 
@@ -17,4 +18,7 @@ public class Leave
     public string? ReportingManager { get; set; }
 
     public LeaveStatus Status { get; set; } = LeaveStatus.Pending;
+
+
+    public string? RejectionReason { get; set; }
 }

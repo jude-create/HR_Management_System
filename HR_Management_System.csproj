@@ -9,9 +9,22 @@
 
   <ItemGroup>
     <Compile Remove="Models\**" />
+    <Compile Remove="NewFolder1\**" />
+    <Compile Remove="Properties\NewFolder\**" />
+    <Compile Remove="Services\NewFolder\**" />
     <Content Remove="Models\**" />
+    <Content Remove="NewFolder1\**" />
+    <Content Remove="Properties\NewFolder\**" />
+    <Content Remove="Services\NewFolder\**" />
     <EmbeddedResource Remove="Models\**" />
+    <EmbeddedResource Remove="NewFolder1\**" />
+    <EmbeddedResource Remove="Properties\NewFolder\**" />
+    <EmbeddedResource Remove="Services\NewFolder\**" />
     <None Remove="Models\**" />
+    <None Remove="NewFolder1\**" />
+    <None Remove="Properties\NewFolder\**" />
+    <None Remove="Services\NewFolder\**" />
+    <_WebToolingArtifacts Remove="Properties\NewFolder\**" />
   </ItemGroup>
 
   <ItemGroup>

@@ -22,6 +22,10 @@ public interface IEmployeeService
         Guid id,
         UpdateEmployeeRequest request);
 
+    EmployeeResult UpdateMyProfile(
+    Guid employeeId,
+    UpdateMyProfileRequest request
+);
     DeleteResult DeleteEmployee(Guid id);
 }
 
@@ -203,7 +207,10 @@ public sealed class EmployeeService : IEmployeeService
                     request.Links.SkypeId?.Trim(),
 
                 GithubId =
-                    request.Links.GithubId?.Trim()
+                    request.Links.GithubId?.Trim(),
+
+                LinkedinId =
+                    request.Links.LinkedinId?.Trim()
             };
         }
 
@@ -273,6 +280,9 @@ public sealed class EmployeeService : IEmployeeService
                 EmployeeOperationError.NotFound);
         }
 
+        var user = _context.Users
+    .FirstOrDefault(x => x.EmployeeId == employee.Id);
+
         if (!HrServiceSupport.TryResolveEmployeeType(
                 request.Type,
                 out var type))
@@ -299,9 +309,8 @@ public sealed class EmployeeService : IEmployeeService
         }
 
         var emailExists = _context.Employees.Any(x =>
-            x.Id != id &&
-            x.Email.ToLower() ==
-            request.Email.ToLower());
+     x.Id != id &&
+     x.Email.ToLower() == request.Email.ToLower());
 
         if (emailExists)
         {
@@ -309,9 +318,24 @@ public sealed class EmployeeService : IEmployeeService
                 EmployeeOperationError.DuplicateEmail);
         }
 
+        var userEmailExists = _context.Users.Any(x =>
+            x.EmployeeId != employee.Id &&
+            x.Email.ToLower() == request.Email.ToLower());
+
+        if (userEmailExists)
+        {
+            return EmployeeResult.Fail(
+                EmployeeOperationError.DuplicateUserEmail);
+        }
+
         employee.Name = request.Name.Trim();
 
         employee.Email = request.Email.Trim();
+
+        if (user is not null)
+        {
+            user.Email = request.Email.Trim();
+        }
 
         employee.Mobile = request.Mobile?.Trim();
 
@@ -340,7 +364,9 @@ public sealed class EmployeeService : IEmployeeService
         if (request.JoiningDate.HasValue)
         {
             employee.JoiningDate =
-                request.JoiningDate.Value;
+                DateTime.SpecifyKind(
+                    request.JoiningDate.Value,
+                    DateTimeKind.Utc);
         }
 
         employee.OfficeLocation =
@@ -371,6 +397,10 @@ public sealed class EmployeeService : IEmployeeService
 
             employee.Links.GithubId =
                 request.Links.GithubId?.Trim();
+
+
+            employee.Links.LinkedinId =
+                request.Links.LinkedinId?.Trim();
         }
 
         _context.SaveChanges();
@@ -385,6 +415,63 @@ public sealed class EmployeeService : IEmployeeService
 
         return EmployeeResult.Success(
             _mapper.Map<EmployeeDto>(updatedEmployee));
+    }
+
+    public EmployeeResult UpdateMyProfile(
+    Guid employeeId,
+    UpdateMyProfileRequest request)
+    {
+        var employee = _context.Employees
+     .Include(x => x.Links)
+     .FirstOrDefault(x => x.Id == employeeId);
+
+        if (employee is null)
+        {
+            return EmployeeResult.Fail(
+                EmployeeOperationError.NotFound
+            );
+        }
+
+        employee.Name = request.Name.Trim();
+        employee.Mobile = request.Mobile?.Trim();
+        employee.DateOfBirth = request.DateOfBirth;
+        employee.Gender = request.Gender?.Trim();
+        employee.Nationality = request.Nationality?.Trim();
+        employee.Address = request.Address?.Trim();
+        employee.City = request.City?.Trim();
+        employee.State = request.State?.Trim();
+        employee.ZipCode = request.ZipCode?.Trim();
+        employee.AvatarUrl = request.AvatarUrl;
+
+        if (request.Links is not null)
+        {
+            if (employee.Links is null)
+            {
+                employee.Links = new EmployeeLinks
+                {
+                    Id = Guid.NewGuid(),
+                    EmployeeId = employee.Id
+                };
+            }
+
+            employee.Links.SlackId =
+                request.Links.SlackId?.Trim();
+
+            employee.Links.SkypeId =
+                request.Links.SkypeId?.Trim();
+
+            employee.Links.GithubId =
+                request.Links.GithubId?.Trim();
+
+            employee.Links.LinkedinId =
+                request.Links.LinkedinId?.Trim();
+        }
+
+        _context.SaveChanges();
+
+        return EmployeeResult.Success(
+            _mapper.Map<EmployeeDto>(employee)
+        );
     }
 
     public DeleteResult DeleteEmployee(Guid id)

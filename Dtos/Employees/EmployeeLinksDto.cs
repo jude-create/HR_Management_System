@@ -3,5 +3,6 @@
 public record EmployeeLinksDto(
     string? SlackId,
     string? SkypeId,
-    string? GithubId
+    string? GithubId,
+    string? LinkedinId
 );

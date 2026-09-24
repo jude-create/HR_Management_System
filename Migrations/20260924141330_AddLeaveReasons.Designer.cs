@@ -3,6 +3,7 @@ using System;
 using HR_Management_System.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HR_Management_System.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260924141330_AddLeaveReasons")]
+    partial class AddLeaveReasons
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -390,44 +393,6 @@ namespace HR_Management_System.Migrations
                     b.ToTable("Leaves");
                 });
 
-            modelBuilder.Entity("HR_Management_System.Entities.LeaveBalance", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("AnnualAllowance")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("AnnualUsed")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CasualAllowance")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CasualUsed")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("EmployeeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("SickAllowance")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("SickUsed")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId", "Year")
-                        .IsUnique();
-
-                    b.ToTable("LeaveBalances");
-                });
-
             modelBuilder.Entity("HR_Management_System.Entities.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -646,17 +611,6 @@ namespace HR_Management_System.Migrations
                 });
 
             modelBuilder.Entity("HR_Management_System.Entities.Leave", b =>
-                {
-                    b.HasOne("HR_Management_System.Entities.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("HR_Management_System.Entities.LeaveBalance", b =>
                 {
                     b.HasOne("HR_Management_System.Entities.Employee", "Employee")
                         .WithMany()

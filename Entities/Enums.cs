@@ -26,3 +26,10 @@ public enum LeaveStatus
     Approved,
     Rejected
 }
+
+public enum LeaveType
+{
+    Annual,
+    Sick,
+    Casual
+}

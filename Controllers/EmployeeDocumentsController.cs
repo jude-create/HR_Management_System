@@ -20,10 +20,32 @@ public class EmployeeDocumentsController : ControllerBase
         _context = context;
     }
 
+    private bool CanAccessEmployee(Guid employeeId)
+    {
+        if (User.IsInRole("Admin") ||
+            User.IsInRole("HrManager"))
+        {
+            return true;
+        }
+
+        var employeeIdClaim =
+            User.FindFirst("employeeId")?.Value;
+
+        return Guid.TryParse(
+            employeeIdClaim,
+            out var loggedInEmployeeId)
+            && loggedInEmployeeId == employeeId;
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<EmployeeDocumentDto>>> GetDocuments(
         Guid employeeId)
     {
+        if (!CanAccessEmployee(employeeId))
+        {
+            return Forbid();
+        }
+
         var employeeExists =
             await _context.Employees
                 .AnyAsync(x => x.Id == employeeId);
@@ -53,6 +75,11 @@ public class EmployeeDocumentsController : ControllerBase
         Guid employeeId,
         [FromBody] CreateEmployeeDocumentRequest request)
     {
+        if (!CanAccessEmployee(employeeId))
+        {
+            return Forbid();
+        }
+
         var employeeExists =
             await _context.Employees
                 .AnyAsync(x => x.Id == employeeId);
@@ -100,6 +127,11 @@ public class EmployeeDocumentsController : ControllerBase
         Guid employeeId,
         Guid documentId)
     {
+        if (!CanAccessEmployee(employeeId))
+        {
+            return Forbid();
+        }
+
         var document =
             await _context.EmployeeDocuments
                 .FirstOrDefaultAsync(x =>

@@ -37,6 +37,7 @@ public class DepartmentsController : ControllerBase
     }
 
     // Creates a new department.
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpPost]
     public ActionResult<DepartmentDto> CreateDepartment([FromBody] DepartmentUpsertRequest request)
     {
@@ -51,6 +52,7 @@ public class DepartmentsController : ControllerBase
     }
 
     // Updates an existing department.
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpPut("{id:guid}")]
     public ActionResult<DepartmentDto> UpdateDepartment(Guid id, [FromBody] DepartmentUpsertRequest request)
     {

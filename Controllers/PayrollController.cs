@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HR_Management_System.Controllers;
 
 // PayrollController exposes payroll list, generate, export, and delete endpoints.
-[Authorize]
+[Authorize(Roles = "Admin,HrManager")]
 [ApiController]
 [Route("api/[controller]")]
 public class PayrollController : ControllerBase

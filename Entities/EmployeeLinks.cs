@@ -13,4 +13,6 @@ public class EmployeeLinks
     public string? SkypeId { get; set; }
 
     public string? GithubId { get; set; }
+
+    public string? LinkedinId { get; set; }
 }

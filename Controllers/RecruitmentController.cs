@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HR_Management_System.Controllers;
 
 // RecruitmentController groups endpoints for jobs and candidates.
-[Authorize]
+[Authorize(Roles = "Admin,HrManager")]
 [ApiController]
 [Route("api/[controller]")]
 public class RecruitmentController : ControllerBase

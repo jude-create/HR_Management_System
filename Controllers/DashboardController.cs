@@ -12,11 +12,13 @@ public class DashboardController : ControllerBase
 {
     private readonly IDashboardService _dashboardService;
 
+
     public DashboardController(IDashboardService dashboardService)
     {
         _dashboardService = dashboardService;
     }
 
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpGet("stats")]
     public ActionResult<DashboardStatsDto> GetDashboardStats()
     {

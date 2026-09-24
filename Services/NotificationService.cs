@@ -9,9 +9,14 @@ namespace HR_Management_System.Services;
 // NotificationService handles the app's alert and notification feed.
 public interface INotificationService
 {
-    IReadOnlyList<NotificationDto> GetNotifications();
-    NotificationDto? UpdateNotificationStatus(Guid id, NotificationStatusRequest request);
-    bool DeleteNotification(Guid id);
+    IReadOnlyList<NotificationDto> GetNotifications(Guid userId);
+
+    NotificationDto? UpdateNotificationStatus(
+        Guid id,
+        Guid userId,
+        NotificationStatusRequest request);
+
+    bool DeleteNotification(Guid id, Guid userId);
 }
 
 // This keeps the notification logic isolated from payroll, auth, and other modules.
@@ -26,37 +31,59 @@ public sealed class NotificationService : INotificationService
         _mapper = mapper;
     }
 
-    public IReadOnlyList<NotificationDto> GetNotifications()
-        // Newest notifications first, so the UI shows the latest events at the top.
+    public IReadOnlyList<NotificationDto> GetNotifications(Guid userId)
     {
-        var notifications = _context.Notifications.AsNoTracking().OrderByDescending(x => x.CreatedAt).ToList();
+        var notifications = _context.Notifications
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToList();
+
         return _mapper.Map<List<NotificationDto>>(notifications);
     }
 
-    public NotificationDto? UpdateNotificationStatus(Guid id, NotificationStatusRequest request)
+    public NotificationDto? UpdateNotificationStatus(
+    Guid id,
+    Guid userId,
+    NotificationStatusRequest request)
     {
-        // Convert the text status from the request into the enum used by the entity.
-        var notification = _context.Notifications.FirstOrDefault(x => x.Id == id);
-        if (notification is null || !Enum.TryParse<NotificationStatus>(request.Status, true, out var status))
+        // Find the notification only if it belongs to the logged-in user.
+        var notification = _context.Notifications
+            .FirstOrDefault(x =>
+                x.Id == id &&
+                x.UserId == userId);
+
+        if (notification is null ||
+            !Enum.TryParse<NotificationStatus>(
+                request.Status,
+                true,
+                out var status))
         {
             return null;
         }
 
         notification.Status = status;
+
         _context.SaveChanges();
+
         return _mapper.Map<NotificationDto>(notification);
     }
 
-    public bool DeleteNotification(Guid id)
+    public bool DeleteNotification(Guid id, Guid userId)
     {
-        // Notifications can be removed directly from the in-memory list.
-        var notification = _context.Notifications.FirstOrDefault(x => x.Id == id);
+        // Only find the notification if it belongs to the logged-in user.
+        var notification = _context.Notifications
+            .FirstOrDefault(x =>
+                x.Id == id &&
+                x.UserId == userId);
+
         if (notification is null)
         {
             return false;
         }
 
         _context.Notifications.Remove(notification);
+
         return _context.SaveChanges() > 0;
     }
 }

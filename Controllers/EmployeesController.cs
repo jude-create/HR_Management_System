@@ -20,6 +20,7 @@ public class EmployeesController : ControllerBase
     }
 
     // GET: api/employees
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpGet]
     public ActionResult<PagedResponse<EmployeeDto>> GetEmployees(
         [FromQuery] int page = 1,
@@ -35,16 +36,33 @@ public class EmployeesController : ControllerBase
     [HttpGet("{id:guid}")]
     public ActionResult<EmployeeDto> GetEmployee(Guid id)
     {
-        var employee =
-            _employeeService.GetEmployee(id);
+        var isAdminOrHr =
+            User.IsInRole("Admin") ||
+            User.IsInRole("HrManager");
+
+        if (!isAdminOrHr)
+        {
+            var employeeIdClaim =
+                User.FindFirst("employeeId")?.Value;
+
+            if (!Guid.TryParse(
+                    employeeIdClaim,
+                    out var loggedInEmployeeId))
+            {
+                return Forbid();
+            }
+
+            if (loggedInEmployeeId != id)
+            {
+                return Forbid();
+            }
+        }
+
+        var employee = _employeeService.GetEmployee(id);
 
         if (employee is null)
         {
-            return NotFound(
-                new
-                {
-                    message = "Employee not found."
-                });
+            return NotFound("Employee not found.");
         }
 
         return Ok(employee);
@@ -114,7 +132,75 @@ public class EmployeesController : ControllerBase
         };
     }
 
+    // GET: api/employees/me
+    [HttpGet("me")]
+    public ActionResult<EmployeeDto> GetMyProfile()
+    {
+        var employeeIdClaim =
+            User.FindFirst("employeeId")?.Value;
+
+        if (!Guid.TryParse(
+                employeeIdClaim,
+                out var employeeId))
+        {
+            return Forbid();
+        }
+
+        var employee = _employeeService.GetEmployee(employeeId);
+
+        if (employee is null)
+        {
+            return NotFound("Employee profile not found.");
+        }
+
+        return Ok(employee);
+    }
+
+    // PUT: api/employees/me
+    [HttpPut("me")]
+    public ActionResult<EmployeeDto> UpdateMyProfile(
+    [FromBody] UpdateMyProfileRequest request)
+    {
+        var employeeIdClaim =
+            User.FindFirst("employeeId")?.Value;
+
+        if (!Guid.TryParse(
+                employeeIdClaim,
+                out var employeeId))
+        {
+            return Forbid();
+        }
+
+        var result =
+            _employeeService.UpdateMyProfile(
+                employeeId,
+                request);
+
+        return result.Error switch
+        {
+            EmployeeOperationError.None =>
+                Ok(result.Employee),
+
+            EmployeeOperationError.NotFound =>
+                NotFound(
+                    new
+                    {
+                        message =
+                            "Employee profile not found."
+                    }),
+
+            _ =>
+                BadRequest(
+                    new
+                    {
+                        message =
+                            "Unable to update employee profile."
+                    })
+        };
+    }
+
     // PUT: api/employees/{id}
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpPut("{id:guid}")]
     public ActionResult<EmployeeDto> UpdateEmployee(
         Guid id,

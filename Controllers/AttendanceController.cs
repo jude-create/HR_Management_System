@@ -81,7 +81,103 @@ public class AttendanceController : ControllerBase
         );
     }
 
+    // Checks in an employee for the day.
+    [Authorize(Roles = "Employee,HrManager")]
+    [HttpPost("check-in")]
+    public ActionResult<AttendanceDto> CheckIn(
+    [FromBody] AttendanceCheckInRequest request)
+    {
+        var employeeIdClaim =
+            User.FindFirst("employeeId")?.Value;
 
+        if (!Guid.TryParse(employeeIdClaim, out var employeeId))
+        {
+            return Forbid();
+        }
+
+        var result = _attendanceService.CheckIn(
+            employeeId,
+            request.Type
+        );
+
+        return result.Error switch
+        {
+            AttendanceOperationError.None =>
+                Ok(result.Attendance),
+
+            AttendanceOperationError.NotFound =>
+                NotFound("Employee not found."),
+
+            AttendanceOperationError.AlreadyCheckedIn =>
+                Conflict("You have already checked in today."),
+
+            _ =>
+                BadRequest("Unable to check in.")
+        };
+    }
+
+    // Checks out an employee for the day.
+    [Authorize(Roles = "Employee,HrManager")]
+    [HttpPost("check-out")]
+    public ActionResult<AttendanceDto> CheckOut()
+    {
+        var employeeIdClaim =
+            User.FindFirst("employeeId")?.Value;
+
+        if (!Guid.TryParse(employeeIdClaim, out var employeeId))
+        {
+            return Forbid();
+        }
+
+        var result = _attendanceService.CheckOut(employeeId);
+
+        return result.Error switch
+        {
+            AttendanceOperationError.None =>
+                Ok(result.Attendance),
+
+            AttendanceOperationError.NotFound =>
+                NotFound("Today's attendance record was not found."),
+
+            AttendanceOperationError.NotCheckedIn =>
+                BadRequest("You must check in before checking out."),
+
+            AttendanceOperationError.AlreadyCheckedOut =>
+                Conflict("You have already checked out today."),
+
+            _ =>
+                BadRequest("Unable to check out.")
+        };
+    }
+
+
+    // Retrieves the attendance records for the logged-in employee.
+    [Authorize(Roles = "Employee,HrManager")]
+    [HttpGet("my")]
+    public ActionResult<PagedResponse<AttendanceDto>> GetMyAttendance(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10,
+    [FromQuery] DateOnly? fromDate = null,
+    [FromQuery] DateOnly? toDate = null)
+    {
+        var employeeIdClaim =
+            User.FindFirst("employeeId")?.Value;
+
+        if (!Guid.TryParse(employeeIdClaim, out var employeeId))
+        {
+            return Forbid();
+        }
+
+        return Ok(
+            _attendanceService.GetMyAttendance(
+                employeeId,
+                page,
+                pageSize,
+                fromDate,
+                toDate
+            )
+        );
+    }
 
     // Marks an attendance record for correction review.
     [HttpPost("{id:guid}/correction")]

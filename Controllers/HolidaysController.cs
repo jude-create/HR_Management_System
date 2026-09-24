@@ -25,6 +25,7 @@ public class HolidaysController : ControllerBase
         => Ok(_holidayService.GetHolidays());
 
     // Creates a new holiday entry.
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpPost]
     public ActionResult<HolidayDto> CreateHoliday([FromBody] HolidayUpsertRequest request)
     {
@@ -39,6 +40,7 @@ public class HolidaysController : ControllerBase
     }
 
     // Updates an existing holiday.
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpPut("{id:guid}")]
     public ActionResult<HolidayDto> UpdateHoliday(Guid id, [FromBody] HolidayUpsertRequest request)
     {
@@ -54,6 +56,8 @@ public class HolidaysController : ControllerBase
     }
 
     // Deletes a holiday.
+
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteHoliday(Guid id)
     {

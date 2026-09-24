@@ -1,3 +1,4 @@
+using HR_Management_System.Entities;
 using System.ComponentModel.DataAnnotations;
 
 namespace HR_Management_System.Dtos.Attendance;
@@ -19,4 +20,8 @@ public record AttendanceDto(
 public record AttendanceCorrectionRequest(
     [ Required, StringLength(500, MinimumLength = 5, ErrorMessage = "Reason must be between 5 and 500 characters.")]
     string Reason
+);
+
+public record AttendanceCheckInRequest(
+    AttendanceType Type
 );

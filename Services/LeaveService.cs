@@ -9,12 +9,22 @@ namespace HR_Management_System.Services;
 
 public interface ILeaveService
 {
+
+    PagedResponse<LeaveDto> GetAllLeaves(
+    int page,
+    int pageSize
+);
     PagedResponse<LeaveDto> GetEmployeeLeaves(
         Guid employeeId,
         int page,
         int pageSize
     );
 
+    PagedResponse<LeaveDto> GetMyLeaves(
+    Guid employeeId,
+    int page,
+    int pageSize
+);
     LeaveResult CreateLeave(
         Guid employeeId,
         CreateLeaveRequest request
@@ -22,19 +32,32 @@ public interface ILeaveService
 
     LeaveResult UpdateLeave(
         Guid id,
-        UpdateLeaveRequest request
+        UpdateLeaveRequest request,
+        Guid? loggedInEmployeeId
     );
 
-    DeleteLeaveResult DeleteLeave(Guid id);
+    DeleteLeaveResult DeleteLeave(
+    Guid id,
+    Guid? loggedInEmployeeId
+);
+
+    LeaveResult UpdateLeaveStatus(
+    Guid id,
+    UpdateLeaveStatusRequest request
+);
 }
 
 public enum LeaveOperationError
 {
     None,
     NotFound,
+    Unauthorized,
     InvalidDateRange,
     InvalidStatus,
-    InvalidDays
+    InvalidDays,
+    InvalidLeaveType,
+    CrossYearLeave,
+    InsufficientLeaveBalance
 }
 
 public sealed record LeaveResult(
@@ -64,15 +87,60 @@ public sealed class LeaveService : ILeaveService
 {
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
+    private readonly ILeaveBalanceService _leaveBalanceService;
 
     public LeaveService(
         AppDbContext context,
-        IMapper mapper)
+        IMapper mapper,
+        ILeaveBalanceService leaveBalanceService)
     {
         _context = context;
         _mapper = mapper;
+        _leaveBalanceService = leaveBalanceService;
     }
 
+    // get all leaves
+    public PagedResponse<LeaveDto> GetAllLeaves(
+        int page,
+        int pageSize)
+    {
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = _context.Leaves
+            .Include(x => x.Employee)
+            .AsNoTracking()
+            .OrderByDescending(x => x.StartDate);
+
+        var totalCount = query.Count();
+
+        var leaves = query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        var data = _mapper.Map<List<LeaveDto>>(leaves);
+
+        var totalPages = totalCount == 0
+            ? 1
+            : (int)Math.Ceiling(
+                totalCount / (double)pageSize
+            );
+
+        var meta = new PageMeta(
+            page,
+            pageSize,
+            totalCount,
+            totalPages
+        );
+
+        return new PagedResponse<LeaveDto>(
+            data,
+            meta
+        );
+    }
+
+    //get employee leaves
     public PagedResponse<LeaveDto> GetEmployeeLeaves(
         Guid employeeId,
         int page,
@@ -115,9 +183,53 @@ public sealed class LeaveService : ILeaveService
         );
     }
 
+    //get my leaves
+    public PagedResponse<LeaveDto> GetMyLeaves(
+    Guid employeeId,
+    int page,
+    int pageSize)
+    {
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = _context.Leaves
+            .Include(x => x.Employee)
+            .AsNoTracking()
+            .Where(x => x.EmployeeId == employeeId)
+            .OrderByDescending(x => x.StartDate);
+
+        var totalCount = query.Count();
+
+        var leaves = query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        var data = _mapper.Map<List<LeaveDto>>(leaves);
+
+        var totalPages = totalCount == 0
+            ? 1
+            : (int)Math.Ceiling(
+                totalCount / (double)pageSize
+            );
+
+        var meta = new PageMeta(
+            page,
+            pageSize,
+            totalCount,
+            totalPages
+        );
+
+        return new PagedResponse<LeaveDto>(
+            data,
+            meta
+        );
+    }
+
+    //create leave
     public LeaveResult CreateLeave(
-        Guid employeeId,
-        CreateLeaveRequest request)
+     Guid employeeId,
+     CreateLeaveRequest request)
     {
         var employeeExists = _context.Employees
             .Any(x => x.Id == employeeId);
@@ -129,10 +241,35 @@ public sealed class LeaveService : ILeaveService
             );
         }
 
+        var leaveType = request.LeaveType.Trim();
+
+        var normalizedLeaveType = leaveType.EndsWith(
+            " Leave",
+            StringComparison.OrdinalIgnoreCase)
+            ? leaveType[..^6].Trim()
+            : leaveType;
+
+        if (!Enum.TryParse<LeaveType>(
+                normalizedLeaveType,
+                true,
+                out _))
+        {
+            return LeaveResult.Fail(
+                LeaveOperationError.InvalidLeaveType
+            );
+        }
+
         if (request.EndDate < request.StartDate)
         {
             return LeaveResult.Fail(
                 LeaveOperationError.InvalidDateRange
+            );
+        }
+
+        if (request.StartDate.Year != request.EndDate.Year)
+        {
+            return LeaveResult.Fail(
+                LeaveOperationError.CrossYearLeave
             );
         }
 
@@ -148,26 +285,27 @@ public sealed class LeaveService : ILeaveService
             );
         }
 
-        var status = LeaveStatus.Pending;
+        var hasSufficientBalance =
+            _leaveBalanceService.HasSufficientBalance(
+                employeeId,
+                request.StartDate.Year,
+                request.LeaveType,
+                days
+            );
 
-        if (!string.IsNullOrWhiteSpace(request.Status))
+        if (!hasSufficientBalance)
         {
-            if (!Enum.TryParse<LeaveStatus>(
-                request.Status,
-                true,
-                out status))
-            {
-                return LeaveResult.Fail(
-                    LeaveOperationError.InvalidStatus
-                );
-            }
+            return LeaveResult.Fail(
+                LeaveOperationError.InsufficientLeaveBalance
+            );
         }
 
         var leave = new Leave
         {
             Id = Guid.NewGuid(),
             EmployeeId = employeeId,
-            LeaveType = request.LeaveType.Trim(),
+            LeaveType = leaveType,
+            Reason = request.Reason?.Trim(),
             StartDate = request.StartDate,
             EndDate = request.EndDate,
             Days = days,
@@ -175,7 +313,7 @@ public sealed class LeaveService : ILeaveService
                 string.IsNullOrWhiteSpace(request.ReportingManager)
                     ? null
                     : request.ReportingManager.Trim(),
-            Status = status
+            Status = LeaveStatus.Pending
         };
 
         _context.Leaves.Add(leave);
@@ -189,10 +327,12 @@ public sealed class LeaveService : ILeaveService
             _mapper.Map<LeaveDto>(completeLeave)
         );
     }
-
+    //update leave
     public LeaveResult UpdateLeave(
         Guid id,
-        UpdateLeaveRequest request)
+        UpdateLeaveRequest request,
+        Guid? loggedInEmployeeId
+        )
     {
         var leave = _context.Leaves
             .FirstOrDefault(x => x.Id == id);
@@ -203,11 +343,126 @@ public sealed class LeaveService : ILeaveService
                 LeaveOperationError.NotFound
             );
         }
+        if (leave.Status != LeaveStatus.Pending)
+        {
+            return LeaveResult.Fail(
+                LeaveOperationError.Unauthorized
+            );
+        }
+
+        var leaveType = request.LeaveType.Trim();
+
+        var normalizedLeaveType = leaveType.EndsWith(" Leave", StringComparison.OrdinalIgnoreCase)
+            ? leaveType[..^6].Trim()
+            : leaveType;
+
+        if (!Enum.TryParse<LeaveType>(
+                normalizedLeaveType,
+                true,
+                out _))
+        {
+            return LeaveResult.Fail(LeaveOperationError.InvalidLeaveType);
+        }
+
+
+        if (loggedInEmployeeId.HasValue &&
+    leave.EmployeeId != loggedInEmployeeId.Value)
+        {
+            return LeaveResult.Fail(
+                LeaveOperationError.Unauthorized
+            );
+        }
 
         if (request.EndDate < request.StartDate)
         {
             return LeaveResult.Fail(
                 LeaveOperationError.InvalidDateRange
+            );
+        }
+
+        if (request.StartDate.Year != request.EndDate.Year)
+        {
+            return LeaveResult.Fail(
+                LeaveOperationError.CrossYearLeave
+            );
+        }
+
+
+        var days =
+            request.EndDate.DayNumber -
+            request.StartDate.DayNumber +
+            1;
+
+        leave.LeaveType = request.LeaveType.Trim();
+        leave.Reason = request.Reason?.Trim();
+        leave.StartDate = request.StartDate;
+        leave.EndDate = request.EndDate;
+        leave.Days = days;
+        leave.ReportingManager =
+            string.IsNullOrWhiteSpace(request.ReportingManager)
+                ? null
+                : request.ReportingManager.Trim();
+
+
+        _context.SaveChanges();
+
+        var completeLeave = _context.Leaves
+            .Include(x => x.Employee)
+            .First(x => x.Id == id);
+
+        return LeaveResult.Success(
+            _mapper.Map<LeaveDto>(completeLeave)
+        );
+    }
+
+    //delete leave
+    public DeleteLeaveResult DeleteLeave(
+    Guid id,
+    Guid? loggedInEmployeeId)
+    {
+        var leave = _context.Leaves
+            .FirstOrDefault(x => x.Id == id);
+
+        if (leave is null)
+        {
+            return DeleteLeaveResult.Fail(
+                LeaveOperationError.NotFound
+            );
+        }
+        if (leave.Status != LeaveStatus.Pending)
+        {
+            return DeleteLeaveResult.Fail(
+                LeaveOperationError.Unauthorized
+            );
+        }
+        if (loggedInEmployeeId.HasValue &&
+          leave.EmployeeId != loggedInEmployeeId.Value)
+        {
+            return DeleteLeaveResult.Fail(
+                LeaveOperationError.Unauthorized
+            );
+        }
+
+        _context.Leaves.Remove(leave);
+        _context.SaveChanges();
+
+        return DeleteLeaveResult.Ok();
+    }
+
+    //update leave status
+    public LeaveResult UpdateLeaveStatus(
+    Guid id,
+    UpdateLeaveStatusRequest request)
+    {
+        using var transaction = _context.Database.BeginTransaction();
+       
+        var leave = _context.Leaves
+            .FirstOrDefault(x => x.Id == id);
+
+        if (leave is null)
+        {
+            return LeaveResult.Fail(
+                LeaveOperationError.NotFound
             );
         }
 
@@ -221,22 +476,64 @@ public sealed class LeaveService : ILeaveService
             );
         }
 
-        var days =
-            request.EndDate.DayNumber -
-            request.StartDate.DayNumber +
-            1;
+        if (status != LeaveStatus.Approved &&
+            status != LeaveStatus.Rejected)
+        {
+            return LeaveResult.Fail(
+                LeaveOperationError.InvalidStatus
+            );
+        }
 
-        leave.LeaveType = request.LeaveType.Trim();
-        leave.StartDate = request.StartDate;
-        leave.EndDate = request.EndDate;
-        leave.Days = days;
-        leave.ReportingManager =
-            string.IsNullOrWhiteSpace(request.ReportingManager)
-                ? null
-                : request.ReportingManager.Trim();
-        leave.Status = status;
+        if (leave.Status != LeaveStatus.Pending)
+        {
+            return LeaveResult.Fail(
+                LeaveOperationError.InvalidStatus
+            );
+        }
 
-        _context.SaveChanges();
+        if (status == LeaveStatus.Rejected &&
+            string.IsNullOrWhiteSpace(request.RejectionReason))
+        {
+            return LeaveResult.Fail(
+                LeaveOperationError.InvalidStatus
+            );
+        }
+        if (status == LeaveStatus.Approved)
+        {
+            var balanceDeducted = _leaveBalanceService.DeductLeave(
+                leave.EmployeeId,
+                leave.StartDate.Year,
+                leave.LeaveType,
+                leave.Days
+            );
+
+            if (!balanceDeducted)
+            {
+                return LeaveResult.Fail(
+                    LeaveOperationError.InsufficientLeaveBalance
+                );
+            }
+        }
+
+      try
+{
+    leave.Status = status;
+
+    leave.RejectionReason =
+        status == LeaveStatus.Rejected
+            ? request.RejectionReason!.Trim()
+            : null;
+
+    _context.SaveChanges();
+
+    transaction.Commit();
+}
+catch
+{
+    transaction.Rollback();
+
+    throw;
+}
 
         var completeLeave = _context.Leaves
             .Include(x => x.Employee)
@@ -245,23 +542,5 @@ public sealed class LeaveService : ILeaveService
         return LeaveResult.Success(
             _mapper.Map<LeaveDto>(completeLeave)
         );
-    }
-
-    public DeleteLeaveResult DeleteLeave(Guid id)
-    {
-        var leave = _context.Leaves
-            .FirstOrDefault(x => x.Id == id);
-
-        if (leave is null)
-        {
-            return DeleteLeaveResult.Fail(
-                LeaveOperationError.NotFound
-            );
-        }
-
-        _context.Leaves.Remove(leave);
-        _context.SaveChanges();
-
-        return DeleteLeaveResult.Ok();
     }
 }

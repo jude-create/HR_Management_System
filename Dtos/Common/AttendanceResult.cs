@@ -6,7 +6,10 @@ public enum AttendanceOperationError
 {
     None,
     NotFound,
-    Unauthorized
+    Unauthorized,
+    AlreadyCheckedIn,
+    NotCheckedIn,
+    AlreadyCheckedOut
 }
 
 public sealed record AttendanceResult(AttendanceDto? Attendance, AttendanceOperationError Error)
