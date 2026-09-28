@@ -1,8 +1,8 @@
 using HR_Management_System.Dtos.Auth;
-using HR_Management_System.Services;
 using HR_Management_System.Dtos.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using HR_Management_System.Services.Auth;
 
 namespace HR_Management_System.Controllers;
 

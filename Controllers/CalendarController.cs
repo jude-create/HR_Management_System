@@ -1,6 +1,5 @@
 ﻿using HR_Management_System.Dtos.Calendar;
-using HR_Management_System.Dtos.Common;
-using HR_Management_System.Services;
+using HR_Management_System.Services.Calendar;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,6 +1,6 @@
 using HR_Management_System.Dtos.Common;
 using HR_Management_System.Dtos.Employees;
-using HR_Management_System.Services;
+using HR_Management_System.Services.Employee;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

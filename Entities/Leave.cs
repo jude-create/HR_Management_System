@@ -1,4 +1,6 @@
-﻿namespace HR_Management_System.Entities;
+﻿using HR_Management_System.Entities.Enums;
+
+namespace HR_Management_System.Entities;
 
 public class Leave
 {

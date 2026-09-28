@@ -1,4 +1,7 @@
+using HR_Management_System.Entities.Enums;
+
 namespace HR_Management_System.Entities;
+
 
 public class Job
 {

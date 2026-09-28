@@ -1,5 +1,7 @@
 using HR_Management_System.Entities;
-using HR_Management_System.Services;
+using HR_Management_System.Services.Auth;
+using HR_Management_System.Entities.Enums;
+
 
 
 namespace HR_Management_System.Data;
@@ -82,7 +84,7 @@ internal static class AppDbSeeder
                 Id = DemoSeedData.AdminUserId,
                 Name = "Amina Bello",
                 Email = "admin@hr.local",
-                PasswordHash = HrServiceSupport.HashPassword("Password123!"),
+                PasswordHash = PasswordHasher.HashPassword("Password123!"),
                 Role = UserRole.Admin,
                 Permissions = ["employees.read", "employees.write", "payroll.manage", "settings.manage"],
                 Settings = new UserSettings
@@ -102,7 +104,7 @@ internal static class AppDbSeeder
                 Id = DemoSeedData.HrUserId,
                 Name = "Tunde Adeyemi",
                 Email = "hr@hr.local",
-                PasswordHash = HrServiceSupport.HashPassword("Password123!"),
+                PasswordHash = PasswordHasher.HashPassword("Password123!"),
                 Role = UserRole.HrManager,
                 Permissions = ["employees.read", "employees.write", "recruitment.manage"],
                 Settings = new UserSettings

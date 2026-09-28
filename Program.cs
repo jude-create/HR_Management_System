@@ -1,9 +1,21 @@
 using HR_Management_System.Data;
 using HR_Management_System.Mappings;
-using HR_Management_System.Services;
+using HR_Management_System.Services.Attendance;
+using HR_Management_System.Services.Auth;
+using HR_Management_System.Services.Calendar;
+using HR_Management_System.Services.Dashboard;
+using HR_Management_System.Services.Department;
+using HR_Management_System.Services.Employee;
+using HR_Management_System.Services.Holiday;
+using HR_Management_System.Services.Leave;
+using HR_Management_System.Services.Notification;
+using HR_Management_System.Services.Payroll;
+using HR_Management_System.Services.Recruitment;
+using HR_Management_System.Services.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using HR_Management_System.Middleware;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -141,6 +153,13 @@ using (var scope = app.Services.CreateScope())
     app.UseSwagger();
     app.UseSwaggerUI();
 //}
+
+// Global exception handler should be early in the pipeline
+// so it can catch exceptions from middleware/controllers/services.
+app.UseMiddleware<GlobalExceptionHandler>();
+
+// Logs every HTTP request and its response time/status.
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 // Redirect HTTP requests to HTTPS.
 app.UseHttpsRedirection();

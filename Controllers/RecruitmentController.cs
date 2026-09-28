@@ -1,6 +1,6 @@
 using HR_Management_System.Dtos.Common;
 using HR_Management_System.Dtos.Recruitment;
-using HR_Management_System.Services;
+using HR_Management_System.Services.Recruitment;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

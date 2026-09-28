@@ -1,6 +1,6 @@
 using HR_Management_System.Dtos.Attendance;
 using HR_Management_System.Dtos.Common;
-using HR_Management_System.Services;
+using HR_Management_System.Services.Attendance;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,7 +27,10 @@ public class AttendanceController : ControllerBase
         [FromQuery] DateOnly? date = null,
         [FromQuery] DateOnly? fromDate = null,
         [FromQuery] DateOnly? toDate = null)
+
+
     {
+
         return Ok(
             _attendanceService.GetAttendance(
                 page,
@@ -40,36 +43,15 @@ public class AttendanceController : ControllerBase
         );
     }
 
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpGet("employee/{employeeId:guid}")]
     public ActionResult<PagedResponse<AttendanceDto>> GetEmployeeAttendance(
-        Guid employeeId,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10,
-        [FromQuery] DateOnly? fromDate = null,
-        [FromQuery] DateOnly? toDate = null)
+     Guid employeeId,
+     [FromQuery] int page = 1,
+     [FromQuery] int pageSize = 10,
+     [FromQuery] DateOnly? fromDate = null,
+     [FromQuery] DateOnly? toDate = null)
     {
-        var isAdminOrHr =
-            User.IsInRole("Admin") ||
-            User.IsInRole("HrManager");
-
-        if (!isAdminOrHr)
-        {
-            var employeeIdClaim =
-                User.FindFirst("employeeId")?.Value;
-
-            if (!Guid.TryParse(
-                    employeeIdClaim,
-                    out var loggedInEmployeeId))
-            {
-                return Forbid();
-            }
-
-            if (loggedInEmployeeId != employeeId)
-            {
-                return Forbid();
-            }
-        }
-
         return Ok(
             _attendanceService.GetEmployeeAttendance(
                 employeeId,
@@ -82,7 +64,7 @@ public class AttendanceController : ControllerBase
     }
 
     // Checks in an employee for the day.
-    [Authorize(Roles = "Employee,HrManager")]
+    [Authorize(Roles = "Employee")]
     [HttpPost("check-in")]
     public ActionResult<AttendanceDto> CheckIn(
     [FromBody] AttendanceCheckInRequest request)
@@ -117,7 +99,7 @@ public class AttendanceController : ControllerBase
     }
 
     // Checks out an employee for the day.
-    [Authorize(Roles = "Employee,HrManager")]
+    [Authorize(Roles = "Employee")]
     [HttpPost("check-out")]
     public ActionResult<AttendanceDto> CheckOut()
     {
@@ -152,7 +134,7 @@ public class AttendanceController : ControllerBase
 
 
     // Retrieves the attendance records for the logged-in employee.
-    [Authorize(Roles = "Employee,HrManager")]
+    [Authorize(Roles = "Employee")]
     [HttpGet("my")]
     public ActionResult<PagedResponse<AttendanceDto>> GetMyAttendance(
     [FromQuery] int page = 1,
@@ -180,37 +162,28 @@ public class AttendanceController : ControllerBase
     }
 
     // Marks an attendance record for correction review.
+    [Authorize(Roles = "Employee")]
     [HttpPost("{id:guid}/correction")]
     public ActionResult<AttendanceDto> RequestCorrection(
-    Guid id,
-    [FromBody] AttendanceCorrectionRequest request)
+     Guid id,
+     [FromBody] AttendanceCorrectionRequest request)
     {
-        var isAdminOrHr =
-            User.IsInRole("Admin") ||
-            User.IsInRole("HrManager");
+        var employeeIdClaim =
+            User.FindFirst("employeeId")?.Value;
 
-        Guid? loggedInEmployeeId = null;
-
-        if (!isAdminOrHr)
+        if (!Guid.TryParse(
+            employeeIdClaim,
+            out var employeeId))
         {
-            var employeeIdClaim =
-                User.FindFirst("employeeId")?.Value;
-
-            if (!Guid.TryParse(
-                    employeeIdClaim,
-                    out var employeeId))
-            {
-                return Forbid();
-            }
-
-            loggedInEmployeeId = employeeId;
+            return Forbid();
         }
 
         var result =
             _attendanceService.RequestAttendanceCorrection(
                 id,
                 request,
-                loggedInEmployeeId);
+                employeeId
+            );
 
         return result.Error switch
         {

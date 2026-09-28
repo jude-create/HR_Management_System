@@ -31,4 +31,7 @@ public record UpdateUserRoleRequest(
 
 // ---- responses ----
 public record AuthUserDto(Guid Id, string Name, string Email, string Role, List<string> Permissions);
-public record AuthSessionDto(string AccessToken, string RefreshToken, DateTime ExpiresAt, AuthUserDto User);
+public record AuthSessionDto(string AccessToken,
+    //string RefreshToken,
+    DateTime ExpiresAt,
+    AuthUserDto User);

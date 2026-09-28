@@ -10,6 +10,7 @@ using HR_Management_System.Dtos.Payroll;
 using HR_Management_System.Dtos.Recruitment;
 using HR_Management_System.Dtos.Settings;
 using HR_Management_System.Entities;
+using HR_Management_System.Entities.Enums;
 
 namespace HR_Management_System.Mappings;
 

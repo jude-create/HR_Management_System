@@ -1,4 +1,4 @@
-using HR_Management_System.Entities;
+using HR_Management_System.Entities.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace HR_Management_System.Dtos.Attendance;

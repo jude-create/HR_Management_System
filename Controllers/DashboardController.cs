@@ -1,5 +1,5 @@
 using HR_Management_System.Dtos.Dashboard;
-using HR_Management_System.Services;
+using HR_Management_System.Services.Dashboard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

@@ -20,30 +20,35 @@ public class EmployeeDocumentsController : ControllerBase
         _context = context;
     }
 
-    private bool CanAccessEmployee(Guid employeeId)
+    private Guid? GetLoggedInEmployeeId()
     {
-        if (User.IsInRole("Admin") ||
-            User.IsInRole("HrManager"))
-        {
-            return true;
-        }
-
         var employeeIdClaim =
             User.FindFirst("employeeId")?.Value;
 
         return Guid.TryParse(
             employeeIdClaim,
-            out var loggedInEmployeeId)
-            && loggedInEmployeeId == employeeId;
+            out var employeeId)
+            ? employeeId
+            : null;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<EmployeeDocumentDto>>> GetDocuments(
         Guid employeeId)
     {
-        if (!CanAccessEmployee(employeeId))
+        var isAdminOrHr =
+            User.IsInRole("Admin") ||
+            User.IsInRole("HrManager");
+
+        if (!isAdminOrHr)
         {
-            return Forbid();
+            var loggedInEmployeeId = GetLoggedInEmployeeId();
+
+            if (!loggedInEmployeeId.HasValue ||
+                loggedInEmployeeId.Value != employeeId)
+            {
+                return Forbid();
+            }
         }
 
         var employeeExists =
@@ -70,16 +75,12 @@ public class EmployeeDocumentsController : ControllerBase
         return Ok(documents);
     }
 
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpPost]
     public async Task<ActionResult<EmployeeDocumentDto>> AddDocument(
         Guid employeeId,
         [FromBody] CreateEmployeeDocumentRequest request)
     {
-        if (!CanAccessEmployee(employeeId))
-        {
-            return Forbid();
-        }
-
         var employeeExists =
             await _context.Employees
                 .AnyAsync(x => x.Id == employeeId);
@@ -92,18 +93,10 @@ public class EmployeeDocumentsController : ControllerBase
         var document = new EmployeeDocument
         {
             Id = Guid.NewGuid(),
-
             EmployeeId = employeeId,
-
-            DocumentType =
-                request.DocumentType.Trim(),
-
-            FileName =
-                request.FileName.Trim(),
-
-            FileUrl =
-                request.FileUrl.Trim(),
-
+            DocumentType = request.DocumentType.Trim(),
+            FileName = request.FileName.Trim(),
+            FileUrl = request.FileUrl.Trim(),
             UploadedAt = DateTime.UtcNow
         };
 
@@ -122,16 +115,12 @@ public class EmployeeDocumentsController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpDelete("{documentId:guid}")]
     public async Task<IActionResult> DeleteDocument(
         Guid employeeId,
         Guid documentId)
     {
-        if (!CanAccessEmployee(employeeId))
-        {
-            return Forbid();
-        }
-
         var document =
             await _context.EmployeeDocuments
                 .FirstOrDefaultAsync(x =>

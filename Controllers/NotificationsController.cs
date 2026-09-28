@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using HR_Management_System.Dtos.Notifications;
-using HR_Management_System.Services;
+using HR_Management_System.Services.Notification;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

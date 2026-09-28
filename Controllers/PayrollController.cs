@@ -1,6 +1,6 @@
 using HR_Management_System.Dtos.Common;
 using HR_Management_System.Dtos.Payroll;
-using HR_Management_System.Services;
+using HR_Management_System.Services.Payroll;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

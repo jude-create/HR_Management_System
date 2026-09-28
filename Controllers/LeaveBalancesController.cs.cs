@@ -1,5 +1,5 @@
 ﻿using HR_Management_System.Dtos.Leave;
-using HR_Management_System.Services;
+using HR_Management_System.Services.Leave;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

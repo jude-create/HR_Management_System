@@ -1,6 +1,5 @@
-using HR_Management_System.Dtos.Common;
 using HR_Management_System.Dtos.Holidays;
-using HR_Management_System.Services;
+using HR_Management_System.Services.Holiday;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

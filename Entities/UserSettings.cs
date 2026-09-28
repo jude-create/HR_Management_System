@@ -1,4 +1,7 @@
+using HR_Management_System.Entities.Enums;
+
 namespace HR_Management_System.Entities;
+
 
 // Per-user preferences. NOT a business record like Employee/Payroll -
 // it's config, so it lives 1-to-1 with User rather than as its own list of "settings".

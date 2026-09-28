@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using HR_Management_System.Entities.Enums;
 
 namespace HR_Management_System.Dtos.Employees;
 
@@ -35,13 +36,13 @@ public record CreateEmployeeRequest(
     string Title,
 
     [Required]
-    string Type,
+    EmployeeType Type,
 
     [Required]
     Guid DepartmentId,
 
     [Required]
-    string Status,
+   EmployeeStatus Status,
 
     DateTime? JoiningDate,
 

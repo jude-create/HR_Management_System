@@ -1,6 +1,6 @@
 ﻿using HR_Management_System.Dtos.Common;
 using HR_Management_System.Dtos.Leaves;
-using HR_Management_System.Services;
+using HR_Management_System.Services.Leave;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -51,6 +51,7 @@ public class LeavesController : ControllerBase
     }
 
     // GET: api/leaves/employee/{employeeId}
+    [Authorize(Roles = "Admin,HrManager")]
     [HttpGet("employee/{employeeId:guid}")]
     public ActionResult<PagedResponse<LeaveDto>> GetEmployeeLeaves(
     Guid employeeId,
@@ -72,6 +73,7 @@ public class LeavesController : ControllerBase
     }
 
     // GET: api/leaves/my
+    [Authorize(Roles = "Employee")]
     [HttpGet("my")]
     public ActionResult<PagedResponse<LeaveDto>> GetMyLeaves(
     [FromQuery] int page = 1,
@@ -97,6 +99,7 @@ public class LeavesController : ControllerBase
     }
 
     // POST: api/leaves/employee/{employeeId}
+    [Authorize(Roles = "Employee")]
     [HttpPost]
     public ActionResult<LeaveDto> CreateLeave(
     [FromBody] CreateLeaveRequest request)
@@ -148,36 +151,26 @@ BadRequest("Employee does not have enough leave balance."),
 
 
     // PUT: api/leaves/{id}
+    [Authorize(Roles = "Employee")]
     [HttpPut("{id:guid}")]
     public ActionResult<LeaveDto> UpdateLeave(
-    Guid id,
-    [FromBody] UpdateLeaveRequest request)
+     Guid id,
+     [FromBody] UpdateLeaveRequest request)
     {
-        var isAdminOrHr =
-            User.IsInRole("Admin") ||
-            User.IsInRole("HrManager");
+        var employeeIdClaim =
+            User.FindFirst("employeeId")?.Value;
 
-        Guid? loggedInEmployeeId = null;
-
-        if (!isAdminOrHr)
+        if (!Guid.TryParse(
+            employeeIdClaim,
+            out var employeeId))
         {
-            var employeeIdClaim =
-                User.FindFirst("employeeId")?.Value;
-
-            if (!Guid.TryParse(
-                employeeIdClaim,
-                out var employeeId))
-            {
-                return Forbid();
-            }
-
-            loggedInEmployeeId = employeeId;
+            return Forbid();
         }
 
         var result = _leaveService.UpdateLeave(
             id,
             request,
-            loggedInEmployeeId
+            employeeId
         );
 
         return result.Error switch
@@ -197,10 +190,11 @@ BadRequest("Employee does not have enough leave balance."),
             LeaveOperationError.InvalidStatus =>
                 BadRequest("Invalid leave status."),
 
-            LeaveOperationError.InvalidLeaveType => BadRequest("Invalid leave type."),
+            LeaveOperationError.InvalidLeaveType =>
+                BadRequest("Invalid leave type."),
 
             LeaveOperationError.CrossYearLeave =>
-    BadRequest("Leave cannot cross calendar years."),
+                BadRequest("Leave cannot cross calendar years."),
 
             _ =>
                 BadRequest("Unable to update leave.")
@@ -239,33 +233,23 @@ BadRequest("Employee does not have enough leave balance."),
     }
 
     // DELETE: api/leaves/{id}
+    [Authorize(Roles = "Employee")]
     [HttpDelete("{id:guid}")]
     public IActionResult DeleteLeave(Guid id)
     {
-        var isAdminOrHr =
-            User.IsInRole("Admin") ||
-            User.IsInRole("HrManager");
+        var employeeIdClaim =
+            User.FindFirst("employeeId")?.Value;
 
-        Guid? loggedInEmployeeId = null;
-
-        if (!isAdminOrHr)
+        if (!Guid.TryParse(
+            employeeIdClaim,
+            out var employeeId))
         {
-            var employeeIdClaim =
-                User.FindFirst("employeeId")?.Value;
-
-            if (!Guid.TryParse(
-                employeeIdClaim,
-                out var employeeId))
-            {
-                return Forbid();
-            }
-
-            loggedInEmployeeId = employeeId;
+            return Forbid();
         }
 
         var result = _leaveService.DeleteLeave(
             id,
-            loggedInEmployeeId
+            employeeId
         );
 
         return result.Error switch
